@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Proprietário - Gestão da Empresa</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-blue: #16319e;
+            --accent-blue: #0033ff;
+            --bg-gray: #F4F7F6;
+            --text-dark: #333;
+            --danger-red: #d32f2f;
+            --success-green: #28a745;
+            --warning-orange: #ff8c00;
+            --teal-action: #009688; 
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-gray); margin: 0; display: flex; }
+
+        /* Sidebar */
+        .sidebar { width: 260px; height: 100vh; background: var(--primary-blue); color: white; position: fixed; padding: 25px; box-sizing: border-box; }
+        .sidebar h2 { font-size: 1.2rem; margin-bottom: 5px; }
+        .sidebar p { font-size: 0.8rem; color: #aab6ff; margin-bottom: 30px; }
+        
+        .menu-item { 
+            display: flex; align-items: center; background: rgba(255,255,255,0.1); 
+            padding: 12px 15px; border-radius: 10px; margin-bottom: 10px; cursor: pointer; transition: 0.3s;
+        }
+        .menu-item:hover { background: rgba(255,255,255,0.2); }
+        .menu-item i { margin-right: 12px; font-size: 1.1rem; }
+        .menu-item span { font-weight: 500; }
+
+        /* Conteúdo Principal */
+        .main-content { margin-left: 260px; flex: 1; padding: 40px; }
+        .header-title { font-size: 1.8rem; font-weight: bold; color: var(--text-dark); margin-bottom: 0; }
+        
+        .header-action { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+
+        /* Cards e Tabelas */
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 15px; border-bottom: 2px solid #EEE; color: #666; font-size: 0.8rem; text-transform: uppercase; font-weight: 800; }
+        td { padding: 15px; border-bottom: 1px solid #F5F5F5; font-size: 0.95rem; color: #333; }
+        
+        .status-desligado { color: var(--danger-red); font-weight: bold; }
+        .status-livre { color: var(--success-green); font-weight: bold; }
+        .status-em-uso { color: var(--accent-blue); font-weight: bold; }
+        
+        /* Cores de Status de Entrega */
+        .badge-sucesso { color: var(--success-green); font-weight: bold; }
+        .badge-fechado { color: var(--danger-red); font-weight: bold; }
+        .badge-recusa { color: var(--warning-orange); font-weight: bold; }
+
+        .secao { display: none; animation: fadeIn 0.4s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        #loading-area { padding: 20px; color: var(--primary-blue); font-weight: bold; display: flex; align-items: center; gap: 10px; }
+
+        /* Botões */
+        .btn-primary { background: var(--accent-blue); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-primary:hover { background: #0022cc; }
+        .btn-secondary { background: #EEE; color: #333; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-secondary:hover { background: #DDD; }
+        
+        /* Ícone de Ação na Tabela */
+        .btn-icon-danger { color: var(--danger-red); cursor: pointer; font-size: 1.2rem; transition: 0.2s; padding: 5px; }
+        .btn-icon-danger:hover { color: #a00; transform: scale(1.1); }
+        .btn-icon-success { color: var(--success-green); cursor: pointer; font-size: 1.2rem; transition: 0.2s; padding: 5px; }
+        .btn-icon-success:hover { color: #1e7e34; transform: scale(1.1); }
+        .btn-icon-delete { color: #777; cursor: pointer; font-size: 1.2rem; transition: 0.2s; padding: 5px; }
+        .btn-icon-delete:hover { color: #000; transform: scale(1.1); }
+
+        /* Modal Formulário e Confirmação */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-container { background: white; padding: 30px; border-radius: 15px; width: 450px; max-width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-container-small { background: white; padding: 25px; border-radius: 10px; width: 350px; max-width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .modal-header h3 { margin: 0; color: var(--text-dark); font-size: 1.4rem; }
+        .btn-close { cursor: pointer; color: #888; font-size: 1.2rem; transition: 0.2s; }
+        .btn-close:hover { color: red; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 8px; }
+        .form-group input { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #CCC; border-radius: 8px; font-size: 0.95rem; background-color: #FAFAFA; }
+        .form-group input:focus { outline: none; border-color: var(--accent-blue); background-color: #FFF; }
+        
+        .row { display: flex; gap: 15px; }
+        .col { flex: 1; }
+        
+        .modal-actions { display: flex; gap: 10px; margin-top: 25px; }
+        .modal-actions button { flex: 1; }
+
+        /* Estilos do Modal de Confirmação */
+        .modal-confirm-title { margin-top: 0; color: #444; font-size: 1.2rem; margin-bottom: 10px; }
+        .modal-confirm-text { color: #666; font-size: 0.95rem; line-height: 1.4; margin-bottom: 25px; }
+        .modal-confirm-actions { display: flex; justify-content: flex-end; gap: 20px; }
+        .btn-text-action { background: none; border: none; color: var(--teal-action); font-weight: bold; font-size: 0.95rem; cursor: pointer; padding: 5px; transition: 0.2s; }
+        .btn-text-action:hover { opacity: 0.7; }
+        
+        /* Estilos do Filtro de Data */
+        .filtro-container { display: flex; align-items: center; gap: 10px; background: white; padding: 5px 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .filtro-label { font-weight: bold; color: var(--text-dark); font-size: 0.9rem; }
+        .filtro-input { border: 1px solid #CCC; border-radius: 6px; padding: 8px; font-family: inherit; outline: none; }
+        .filtro-input:focus { border-color: var(--accent-blue); }
+
+        /* Estilos dos Cards de KPI (Gráficos Iniciais) */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .kpi-card { padding: 25px; border-radius: 15px; display: flex; align-items: center; justify-content: space-between; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.2s; }
+        .kpi-card:hover { transform: translateY(-5px); }
+        .kpi-info { display: flex; flex-direction: column; }
+        .kpi-title { font-size: 0.9rem; text-transform: uppercase; font-weight: 600; opacity: 0.9; margin-bottom: 5px; letter-spacing: 0.5px; }
+        .kpi-value { font-size: 2.2rem; font-weight: bold; margin: 0; }
+        .kpi-icon { font-size: 2.5rem; opacity: 0.8; }
+        
+        .kpi-blue { background: linear-gradient(135deg, #4A90E2, #16319e); }
+        .kpi-green { background: linear-gradient(135deg, #43A047, #28a745); }
+        .kpi-orange { background: linear-gradient(135deg, #FB8C00, #F57C00); }
+        .kpi-red { background: linear-gradient(135deg, #E53935, #C62828); }
+
+        /* NOVO: Estilos do Dashboard de Gráficos Analíticos */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; margin-top: 20px; }
+        .chart-box { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .chart-box-title { font-size: 1.1rem; color: var(--text-dark); margin-bottom: 15px; font-weight: bold; text-align: center; border-bottom: 2px solid #F4F7F6; padding-bottom: 10px; }
+        .canvas-container { position: relative; height: 300px; width: 100%; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>Gestão da Empresa</h2>
+        <p>Configurações administrativas e segurança.</p>
+        
+        <div class="menu-item" onclick="abrirSecao('dashboard')">
+            <i class="fas fa-chart-pie"></i>
+            <span>Dashboard Analítico</span>
+        </div>
+        <div class="menu-item" onclick="abrirSecao('motoristas')">
+            <i class="fas fa-users"></i>
+            <span>Motoristas Cadastrados</span>
+        </div>
+        <div class="menu-item" onclick="abrirSecao('rotas')">
+            <i class="fas fa-project-diagram"></i>
+            <span>Gerenciamento de Rota</span>
+        </div>
+        <div class="menu-item" onclick="abrirSecao('frota')">
+            <i class="fas fa-truck"></i>
+            <span>Gerenciar Frota</span>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div id="loading-area"><i class="fas fa-sync fa-spin"></i> Sincronizando com Banco de Dados...</div>
+
+        <div id="sec-dashboard" class="secao">
+            <div class="header-action">
+                <div class="header-title">Visão Geral e Estatísticas</div>
+            </div>
+            <div class="dashboard-grid">
+                <div class="chart-box">
+                    <div class="chart-box-title">Status das Entregas</div>
+                    <div class="canvas-container">
+                        <canvas id="graficoStatus"></canvas>
+                    </div>
+                </div>
+                <div class="chart-box">
+                    <div class="chart-box-title">Veículos com Mais Entregas</div>
+                    <div class="canvas-container">
+                        <canvas id="graficoVeiculos"></canvas>
+                    </div>
+                </div>
+                <div class="chart-box" style="grid-column: 1 / -1;">
+                    <div class="chart-box-title">Veículos com Mais Tempo em Rota (Minutos)</div>
+                    <div class="canvas-container">
+                        <canvas id="graficoTempo"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="sec-motoristas" class="secao">
+            <div class="header-action">
+                <div class="header-title">Motoristas Cadastrados</div>
+                <button class="btn-primary" onclick="abrirModalMotorista()">
+                    <i class="fas fa-plus"></i> Novo Motorista
+                </button>
+            </div>
+            <div class="card">
+                <table id="tabela-motoristas">
+                    <thead>
+                        <tr>
+                            <th>NOME / VEÍCULO ATUAL</th>
+                            <th>DOCUMENTO</th>
+                            <th>IDADE</th>
+                            <th>STATUS ACESSO</th>
+                            <th style="text-align: center;">AÇÕES</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="sec-rotas" class="secao">
+            <div class="header-action">
+                <div class="header-title">Histórico de Entregas e Ocorrências</div>
+                <div class="filtro-container">
+                    <label for="filtro-data" class="filtro-label"><i class="fas fa-calendar-alt" style="color: var(--accent-blue);"></i> Filtrar por Data:</label>
+                    <input type="date" id="filtro-data" class="filtro-input" onchange="carregarRotas()">
+                    <button class="btn-secondary" onclick="limparFiltroData()" title="Limpar Filtro" style="padding: 8px 12px;"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card kpi-blue">
+                    <div class="kpi-info">
+                        <span class="kpi-title">Total de Entregas</span>
+                        <h3 class="kpi-value" id="kpi-total">0</h3>
+                    </div>
+                    <i class="fas fa-box-open kpi-icon"></i>
+                </div>
+                <div class="kpi-card kpi-green">
+                    <div class="kpi-info">
+                        <span class="kpi-title">Com Sucesso</span>
+                        <h3 class="kpi-value" id="kpi-sucesso">0</h3>
+                    </div>
+                    <i class="fas fa-check-circle kpi-icon"></i>
+                </div>
+                <div class="kpi-card kpi-orange">
+                    <div class="kpi-info">
+                        <span class="kpi-title">Com Avaria</span>
+                        <h3 class="kpi-value" id="kpi-avaria">0</h3>
+                    </div>
+                    <i class="fas fa-exclamation-triangle kpi-icon"></i>
+                </div>
+                <div class="kpi-card kpi-red">
+                    <div class="kpi-info">
+                        <span class="kpi-title">Não Realizadas</span>
+                        <h3 class="kpi-value" id="kpi-falha">0</h3>
+                    </div>
+                    <i class="fas fa-times-circle kpi-icon"></i>
+                </div>
+            </div>
+
+            <div class="card">
+                <table id="tabela-rotas">
+                    <thead>
+                        <tr>
+                            <th>ESTABELECIMENTO</th>
+                            <th>MOTORISTA</th>
+                            <th>PLACA</th>
+                            <th>DATA</th>
+                            <th>TEMPO</th>
+                            <th>AVARIA</th>
+                            <th>STATUS FINAL</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="sec-frota" class="secao">
+            <div class="header-action">
+                <div class="header-title">Gerenciar Frota</div>
+            </div>
+            <div class="card">
+                <table id="tabela-frota">
+                    <thead>
+                        <tr>
+                            <th>PLACA</th>
+                            <th>MODELO/MARCA</th>
+                            <th>STATUS ATUAL</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-motorista" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Adicionar Motorista</h3>
+                <i class="fas fa-times btn-close" onclick="fecharModalMotorista()"></i>
+            </div>
+            
+            <form id="form-motorista" onsubmit="salvarMotorista(event)">
+                <div class="form-group">
+                    <label>Nome Completo</label>
+                    <input type="text" id="mot-nome" placeholder="Ex: João Silva" required>
+                </div>
+                
+                <div class="row">
+                    <div class="form-group col" style="flex: 0.8;">
+                        <label>Idade</label>
+                        <input type="number" id="mot-idade" placeholder="Ex: 35" required>
+                    </div>
+                    <div class="form-group col" style="flex: 1.2;">
+                        <label>Documento (CPF/CNH)</label>
+                        <input type="text" id="mot-documento" placeholder="000.000.000-00" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Vencimento Toxicológico</label>
+                    <input type="text" id="mot-toxicologico" placeholder="DD/MM/AAAA">
+                </div>
+
+                <div class="form-group">
+                    <label>Senha de Acesso</label>
+                    <input type="text" id="mot-senha" placeholder="Apenas números" required>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="fecharModalMotorista()">Cancelar</button>
+                    <button type="submit" class="btn-primary" id="btn-salvar-mot" style="justify-content: center;">Salvar Motorista</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-confirmacao" class="modal-overlay">
+        <div class="modal-container-small">
+            <h3 class="modal-confirm-title">Confirmar Desligamento</h3>
+            <p id="texto-confirmacao" class="modal-confirm-text">
+                Deseja DESLIGAR o motorista X? Ele perderá o acesso, mas o histórico será mantido.
+            </p>
+            <div class="modal-confirm-actions">
+                <button type="button" class="btn-text-action" onclick="fecharModalConfirmacao()">CANCELAR</button>
+                <button type="button" class="btn-text-action" onclick="executarDesligamento()">DESLIGAR</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-reativar" class="modal-overlay">
+        <div class="modal-container-small">
+            <h3 class="modal-confirm-title">Reativar Motorista</h3>
+            <p id="texto-reativar" class="modal-confirm-text">
+                Digite a senha administrativa para reativar o acesso deste motorista.
+            </p>
+            <form id="form-reativar" onsubmit="executarReativacao(event)">
+                <div class="form-group">
+                    <input type="password" id="input-senha-reativar" placeholder="Senha Admin" required style="text-align: center; letter-spacing: 2px;">
+                </div>
+                <div class="modal-confirm-actions" style="margin-top: 20px;">
+                    <button type="button" class="btn-text-action" style="color: #666;" onclick="fecharModalReativar()">CANCELAR</button>
+                    <button type="submit" class="btn-text-action" style="color: var(--success-green);">REATIVAR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-exclusao" class="modal-overlay">
+        <div class="modal-container-small">
+            <h3 class="modal-confirm-title" style="color: var(--text-dark);">Excluir Motorista</h3>
+            <p id="texto-exclusao" class="modal-confirm-text">
+                Deseja realmente EXCLUIR o motorista X? Esta ação é irreversível e apagará o cadastro do sistema.
+            </p>
+            <div class="modal-confirm-actions">
+                <button type="button" class="btn-text-action" style="color: #666;" onclick="fecharModalExclusao()">CANCELAR</button>
+                <button type="button" class="btn-text-action" style="color: var(--danger-red);" onclick="executarExclusao()">EXCLUIR</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURAÇÕES SUPABASE
+        const SUPABASE_URL = 'https://heupqmwxkpsezzfnqbsb.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhldXBxbXd4a3BzZXp6Zm5xYnNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MDg2MzEsImV4cCI6MjA4NzE4NDYzMX0.EZdsGLLDXu-xn_rKcnqWU2vFIfueStG0yrgWsIBUc-4';
+        
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const SENHA_ADMIN = '1234'; 
+
+        // Instâncias dos Gráficos
+        let instGraficoStatus, instGraficoVeiculos, instGraficoTempo;
+
+        function formatarDataBR(dataString) {
+            if (!dataString) return '--/--/----';
+            const data = new Date(dataString);
+            return data.toLocaleDateString('pt-BR');
+        }
+
+        function aplicarEstiloStatus(status) {
+            if (!status || status === 'Pendente') return 'Pendente';
+            if (status.includes('Sucesso')) return `<span class="badge-sucesso">${status}</span>`;
+            if (status.includes('Fechado')) return `<span class="badge-fechado">${status}</span>`;
+            if (status.includes('Recusou')) return `<span class="badge-recusa">${status}</span>`;
+            return status;
+        }
+
+        // ==========================================
+        // 1. CARREGAR ENTREGAS LENDO DA "ROTAS_DIARIAS" (COM FILTRO E KPIS)
+        // ==========================================
+        async function carregarRotas() {
+            mostrarCarregamento(true);
+            
+            const filtroData = document.getElementById('filtro-data').value;
+            
+            const { data, error } = await _supabase
+                .from('rotas_diarias')
+                .select(`
+                    id, 
+                    veiculo_placa, 
+                    data_inicio, 
+                    lista_entregas, 
+                    motoristas(nome, ativo)
+                `)
+                .order('data_inicio', { ascending: false });
+
+            if (error) { console.error("Erro ao buscar rotas diárias:", error); return; }
+
+            const tbody = document.querySelector('#tabela-rotas tbody');
+            let htmlRows = '';
+            
+            // Variáveis para os KPIs e Gráficos
+            let contadorTotal = 0, contadorSucesso = 0, contadorAvaria = 0, contadorFalha = 0;
+            let estatisticasVeiculos = {}; // Para o gráfico de Entregas por Veículo
+            let tempoPorVeiculo = {};      // Para o gráfico de Tempo por Veículo
+
+            data.forEach(rota => {
+                const motoristaNome = rota.motoristas?.nome || 'Não identificado';
+                const desligado = rota.motoristas?.ativo === false;
+                const placaVeiculo = rota.veiculo_placa || 'Sem Placa';
+
+                if (rota.lista_entregas && Array.isArray(rota.lista_entregas)) {
+                    rota.lista_entregas.forEach(entrega => {
+                        const dataReal = entrega.data_entrega || rota.data_inicio;
+                        
+                        if (filtroData && dataReal) {
+                            const dataObj = new Date(dataReal);
+                            const mes = String(dataObj.getMonth() + 1).padStart(2, '0');
+                            const dia = String(dataObj.getDate()).padStart(2, '0');
+                            const dataFormatadaBanco = `${dataObj.getFullYear()}-${mes}-${dia}`;
+                            
+                            if (dataFormatadaBanco !== filtroData) return; 
+                        }
+
+                        // Lógica Analítica dos KPIs e Gráficos
+                        contadorTotal++;
+                        
+                        // Inicializa contadores de veículos
+                        if (!estatisticasVeiculos[placaVeiculo]) estatisticasVeiculos[placaVeiculo] = 0;
+                        if (!tempoPorVeiculo[placaVeiculo]) tempoPorVeiculo[placaVeiculo] = 0;
+
+                        estatisticasVeiculos[placaVeiculo]++;
+                        
+                        if (entrega.avaria) contadorAvaria++;
+                        
+                        if (entrega.status === 'Entrega com Sucesso') {
+                            contadorSucesso++;
+                        } else if (entrega.status && entrega.status !== 'Pendente') {
+                            contadorFalha++;
+                        }
+
+                        // Calcula o tempo do veículo extraindo "MM:SS"
+                        if (entrega.tempo_permanencia) {
+                            let partesTempo = entrega.tempo_permanencia.split(':');
+                            if (partesTempo.length === 2) {
+                                let minutosFloat = parseInt(partesTempo[0]) + (parseInt(partesTempo[1]) / 60);
+                                tempoPorVeiculo[placaVeiculo] += minutosFloat;
+                            }
+                        }
+
+                        const avariaFormatada = entrega.avaria ? '<span style="color: red; font-weight: bold;">SIM</span>' : '<span style="color: green;">NÃO</span>';
+                        
+                        htmlRows += `
+                        <tr>
+                            <td><b>${entrega.estabelecimento || '--'}</b></td>
+                            <td class="${desligado ? 'status-desligado' : ''}">${motoristaNome} ${desligado ? '(Removido)' : ''}</td>
+                            <td><b><span style="color: var(--text-dark);">${placaVeiculo}</span></b></td>
+                            <td>${formatarDataBR(dataReal)}</td>
+                            <td>${entrega.tempo_permanencia || '--'}</td>
+                            <td>${avariaFormatada}</td>
+                            <td>${aplicarEstiloStatus(entrega.status)}</td>
+                        </tr>
+                        `;
+                    });
+                }
+            });
+
+            // Atualiza os Valores na Tela (Aba Rotas)
+            document.getElementById('kpi-total').innerText = contadorTotal;
+            document.getElementById('kpi-sucesso').innerText = contadorSucesso;
+            document.getElementById('kpi-avaria').innerText = contadorAvaria;
+            document.getElementById('kpi-falha').innerText = contadorFalha;
+
+            if (contadorTotal === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Nenhuma entrega encontrada para este período.</td></tr>';
+            } else {
+                tbody.innerHTML = htmlRows;
+            }
+            
+            // Desenha/Atualiza os Gráficos Analíticos
+            desenharGraficos(contadorSucesso, contadorAvaria, contadorFalha, estatisticasVeiculos, tempoPorVeiculo);
+            
+            mostrarCarregamento(false);
+        }
+
+        function limparFiltroData() {
+            document.getElementById('filtro-data').value = '';
+            carregarRotas();
+        }
+
+        // ==========================================
+        // NOVO: DESENHAR GRÁFICOS DO DASHBOARD
+        // ==========================================
+        function desenharGraficos(sucesso, avaria, falha, veiculosDict, tempoDict) {
+            
+            // 1. Gráfico de Status (Doughnut)
+            const ctxStatus = document.getElementById('graficoStatus').getContext('2d');
+            if (instGraficoStatus) instGraficoStatus.destroy();
+            instGraficoStatus = new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Sucesso', 'Com Avaria', 'Não Realizadas'],
+                    datasets: [{
+                        data: [sucesso, avaria, falha],
+                        backgroundColor: ['#28a745', '#ff8c00', '#d32f2f'],
+                        borderWidth: 2,
+                        hoverOffset: 4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            // 2. Gráfico Veículos Mais Usados (Bar)
+            const labelsVeiculos = Object.keys(veiculosDict);
+            const dadosVeiculos = Object.values(veiculosDict);
+            const ctxVeiculos = document.getElementById('graficoVeiculos').getContext('2d');
+            if (instGraficoVeiculos) instGraficoVeiculos.destroy();
+            instGraficoVeiculos = new Chart(ctxVeiculos, {
+                type: 'bar',
+                data: {
+                    labels: labelsVeiculos,
+                    datasets: [{
+                        label: 'Qtd. de Entregas',
+                        data: dadosVeiculos,
+                        backgroundColor: '#0033ff',
+                        borderRadius: 6
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+
+            // 3. Gráfico Tempo em Rota (Bar)
+            const labelsTempo = Object.keys(tempoDict);
+            // Arredonda os minutos para 1 casa decimal
+            const dadosTempo = Object.values(tempoDict).map(v => v.toFixed(1)); 
+            const ctxTempo = document.getElementById('graficoTempo').getContext('2d');
+            if (instGraficoTempo) instGraficoTempo.destroy();
+            instGraficoTempo = new Chart(ctxTempo, {
+                type: 'bar',
+                data: {
+                    labels: labelsTempo,
+                    datasets: [{
+                        label: 'Minutos totais em atendimento',
+                        data: dadosTempo,
+                        backgroundColor: '#16319e',
+                        borderRadius: 6
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        // ==========================================
+        // 2. CARREGAR MOTORISTAS
+        // ==========================================
+        async function carregarMotoristas() {
+            mostrarCarregamento(true);
+            const { data } = await _supabase.from('motoristas').select('*, veiculos(placa)').order('nome');
+            const tbody = document.querySelector('#tabela-motoristas tbody');
+            
+            tbody.innerHTML = data.map(m => {
+                const placaVinculada = m.veiculos && m.veiculos.length > 0 ? ` - <span style="color:var(--accent-blue)">[${m.veiculos[0].placa}]</span>` : "";
+                
+                const btnStatus = m.ativo 
+                    ? `<i class="fas fa-user-minus btn-icon-danger" title="Desligar Motorista" onclick="confirmarDesligamento('${m.id}', '${m.nome}')"></i>` 
+                    : `<i class="fas fa-user-plus btn-icon-success" title="Reativar Motorista" onclick="confirmarReativacao('${m.id}', '${m.nome}')"></i>`;
+                
+                const btnDeletar = `<i class="fas fa-trash-alt btn-icon-delete" title="Excluir Definitivamente" onclick="confirmarExclusao('${m.id}', '${m.nome}')"></i>`;
+
+                return `
+                <tr>
+                    <td><b>${m.nome}</b>${placaVinculada}</td>
+                    <td>${m.documento || '--'}</td>
+                    <td>${m.idade || '--'}</td>
+                    <td class="${m.ativo ? '' : 'status-desligado'}">${m.ativo ? 'Ativo' : 'DESLIGADO'}</td>
+                    <td style="text-align: center;">
+                        <div style="display: flex; justify-content: center; gap: 15px;">
+                            ${btnStatus}
+                            ${btnDeletar}
+                        </div>
+                    </td>
+                </tr>
+            `}).join('');
+            mostrarCarregamento(false);
+        }
+
+        // ==========================================
+        // LÓGICA DO MODAL DE MOTORISTAS E MÁSCARAS
+        // ==========================================
+        function abrirModalMotorista() {
+            document.getElementById('modal-motorista').style.display = 'flex';
+        }
+
+        function fecharModalMotorista() {
+            document.getElementById('modal-motorista').style.display = 'none';
+            document.getElementById('form-motorista').reset();
+        }
+
+        async function salvarMotorista(event) {
+            event.preventDefault(); 
+            
+            const btnSalvar = document.getElementById('btn-salvar-mot');
+            btnSalvar.innerText = 'Salvando...';
+            btnSalvar.disabled = true;
+
+            const nome = document.getElementById('mot-nome').value;
+            const idade = document.getElementById('mot-idade').value;
+            const documento = document.getElementById('mot-documento').value;
+            const toxicologico = document.getElementById('mot-toxicologico').value;
+            const senha = document.getElementById('mot-senha').value;
+
+            const { error } = await _supabase.from('motoristas').insert([{
+                nome: nome,
+                idade: idade ? parseInt(idade) : null,
+                documento: documento,
+                toxicologico: toxicologico,
+                senha: senha,
+                ativo: true 
+            }]);
+
+            btnSalvar.innerText = 'Salvar Motorista';
+            btnSalvar.disabled = false;
+
+            if (error) {
+                alert("Erro ao salvar o motorista: " + error.message);
+            } else {
+                fecharModalMotorista(); 
+                carregarMotoristas(); 
+            }
+        }
+
+        // ==========================================
+        // LÓGICA DE DESLIGAMENTO DE MOTORISTA
+        // ==========================================
+        let motoristaIdParaDesligar = null;
+
+        function confirmarDesligamento(id, nome) {
+            motoristaIdParaDesligar = id;
+            document.getElementById('texto-confirmacao').innerText = `Deseja DESLIGAR o motorista ${nome}? Ele perderá o acesso, mas o histórico será mantido.`;
+            document.getElementById('modal-confirmacao').style.display = 'flex';
+        }
+
+        function fecharModalConfirmacao() {
+            document.getElementById('modal-confirmacao').style.display = 'none';
+            motoristaIdParaDesligar = null;
+        }
+
+        async function executarDesligamento() {
+            if(!motoristaIdParaDesligar) return;
+            
+            mostrarCarregamento(true);
+            
+            const { error } = await _supabase
+                .from('motoristas')
+                .update({ ativo: false })
+                .eq('id', motoristaIdParaDesligar);
+                
+            if(error) {
+                alert("Erro ao desligar motorista: " + error.message);
+                mostrarCarregamento(false);
+            } else {
+                fecharModalConfirmacao();
+                carregarMotoristas(); 
+                carregarRotas(); 
+            }
+        }
+
+        // ==========================================
+        // LÓGICA DE REATIVAÇÃO DE MOTORISTA COM SENHA
+        // ==========================================
+        let motoristaIdParaReativar = null;
+
+        function confirmarReativacao(id, nome) {
+            motoristaIdParaReativar = id;
+            document.getElementById('texto-reativar').innerHTML = `Digite a senha administrativa para reativar o acesso de <b>${nome}</b>.`;
+            document.getElementById('modal-reativar').style.display = 'flex';
+        }
+
+        function fecharModalReativar() {
+            document.getElementById('modal-reativar').style.display = 'none';
+            document.getElementById('input-senha-reativar').value = ''; 
+            motoristaIdParaReativar = null;
+        }
+
+        async function executarReativacao(event) {
+            event.preventDefault(); 
+            if(!motoristaIdParaReativar) return;
+
+            const senhaDigitada = document.getElementById('input-senha-reativar').value;
+
+            if(senhaDigitada !== SENHA_ADMIN) {
+                alert('Acesso Negado: Senha administrativa incorreta.');
+                return;
+            }
+            
+            mostrarCarregamento(true);
+            
+            const { error } = await _supabase
+                .from('motoristas')
+                .update({ ativo: true })
+                .eq('id', motoristaIdParaReativar);
+                
+            if(error) {
+                alert("Erro ao reativar motorista: " + error.message);
+                mostrarCarregamento(false);
+            } else {
+                fecharModalReativar();
+                carregarMotoristas(); 
+                carregarRotas(); 
+            }
+        }
+
+        // ==========================================
+        // LÓGICA DE EXCLUSÃO DEFINITIVA DO MOTORISTA
+        // ==========================================
+        let motoristaIdParaExcluir = null;
+
+        function confirmarExclusao(id, nome) {
+            motoristaIdParaExcluir = id;
+            document.getElementById('texto-exclusao').innerHTML = `Deseja realmente EXCLUIR o motorista <b>${nome}</b>? Esta ação é irreversível e apagará o cadastro do sistema.`;
+            document.getElementById('modal-exclusao').style.display = 'flex';
+        }
+
+        function fecharModalExclusao() {
+            document.getElementById('modal-exclusao').style.display = 'none';
+            motoristaIdParaExcluir = null;
+        }
+
+        async function executarExclusao() {
+            if(!motoristaIdParaExcluir) return;
+            
+            mostrarCarregamento(true);
+            
+            const { error } = await _supabase
+                .from('motoristas')
+                .delete()
+                .eq('id', motoristaIdParaExcluir);
+                
+            if(error) {
+                alert("Erro ao excluir. O motorista pode possuir rotas atreladas a ele no histórico. Considere apenas Desligar.\n\nDetalhe do banco: " + error.message);
+                mostrarCarregamento(false);
+            } else {
+                fecharModalExclusao();
+                carregarMotoristas(); 
+            }
+        }
+
+        // ==========================================
+        // 3. CARREGAR FROTA
+        // ==========================================
+        async function carregarFrota() {
+            mostrarCarregamento(true);
+            const { data } = await _supabase.from('veiculos').select('*, motoristas:motorista_atual_id(nome)').order('placa');
+            const tbody = document.querySelector('#tabela-frota tbody');
+            
+            tbody.innerHTML = data.map(v => `
+                <tr>
+                    <td><b>${v.placa}</b></td>
+                    <td>${v.modelo || '--'}</td>
+                    <td class="${v.em_uso ? 'status-em-uso' : 'status-livre'}">
+                        ${v.em_uso ? 'EM USO (' + (v.motoristas?.nome || '...') + ')' : 'LIVRE / DISPONÍVEL'}
+                    </td>
+                </tr>
+            `).join('');
+            mostrarCarregamento(false);
+        }
+
+        // ==========================================
+        // UTILITÁRIOS, NAVEGAÇÃO E EVENTOS
+        // ==========================================
+        function mostrarCarregamento(mostrar) {
+            document.getElementById('loading-area').style.display = mostrar ? 'flex' : 'none';
+        }
+
+        function abrirSecao(id) {
+            document.querySelectorAll('.secao').forEach(s => s.style.display = 'none');
+            document.getElementById('sec-' + id).style.display = 'block';
+            
+            if(id === 'motoristas') carregarMotoristas();
+            if(id === 'rotas') carregarRotas();
+            if(id === 'frota') carregarFrota();
+            
+            // NOVO: Também atualiza as rotas em background para preencher o Dashboard Analítico ao abri-lo
+            if(id === 'dashboard') carregarRotas(); 
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            abrirSecao('dashboard'); // Agora o painel inicia na visão do Dashboard!
+            
+            // --- INÍCIO DAS MÁSCARAS DE FORMULÁRIO ---
+            
+            document.getElementById('mot-nome').addEventListener('input', function(e) {
+                let palavras = e.target.value.split(' ');
+                let formatado = palavras.map(palavra => {
+                    return palavra.charAt(0).toUpperCase() + palavra.slice(1);
+                }).join(' ');
+                e.target.value = formatado;
+            });
+
+            document.getElementById('mot-documento').addEventListener('input', function(e) {
+                let valor = e.target.value.replace(/\D/g, ''); 
+                if (valor.length > 11) valor = valor.slice(0, 11); 
+                
+                valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
+                valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
+                valor = valor.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+                
+                e.target.value = valor;
+            });
+
+            document.getElementById('mot-toxicologico').addEventListener('input', function(e) {
+                let valor = e.target.value.replace(/\D/g, ''); 
+                if (valor.length > 8) valor = valor.slice(0, 8); 
+                
+                valor = valor.replace(/(\d{2})(\d)/, "$1/$2");
+                valor = valor.replace(/(\d{2})(\d)/, "$1/$2");
+                
+                e.target.value = valor;
+            });
+            
+            // --- FIM DAS MÁSCARAS ---
+        });
+    </script>
+</body>
+</html>
