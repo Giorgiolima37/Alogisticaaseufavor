@@ -26,7 +26,7 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-gray); margin: 0; display: flex; }
 
         /* Sidebar */
-        .sidebar { width: 260px; height: 100vh; background: var(--primary-blue); color: white; position: fixed; padding: 25px; box-sizing: border-box; }
+        .sidebar { width: 260px; height: 100vh; background: var(--primary-blue); color: white; position: fixed; padding: 25px; box-sizing: border-box; z-index: 100; }
         .sidebar h2 { font-size: 1.2rem; margin-bottom: 5px; }
         .sidebar p { font-size: 0.8rem; color: #aab6ff; margin-bottom: 30px; }
         
@@ -39,15 +39,15 @@
         .menu-item span { font-weight: 500; }
 
         /* Conteúdo Principal */
-        .main-content { margin-left: 260px; flex: 1; padding: 40px; }
+        .main-content { margin-left: 260px; flex: 1; padding: 40px; box-sizing: border-box; width: calc(100% - 260px); }
         .header-title { font-size: 1.8rem; font-weight: bold; color: var(--text-dark); margin-bottom: 0; }
         
-        .header-action { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header-action { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;}
 
         /* Cards e Tabelas */
-        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto; margin-bottom: 30px;}
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 15px; border-bottom: 2px solid #EEE; color: #666; font-size: 0.8rem; text-transform: uppercase; font-weight: 800; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto; margin-bottom: 30px; width: 100%; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; } /* min-width para forçar scroll horizontal no mobile */
+        th { text-align: left; padding: 15px; border-bottom: 2px solid #EEE; color: #666; font-size: 0.8rem; text-transform: uppercase; font-weight: 800; white-space: nowrap; }
         td { padding: 15px; border-bottom: 1px solid #F5F5F5; font-size: 0.95rem; color: #333; }
         
         .status-desligado { color: var(--danger-red); font-weight: bold; }
@@ -59,14 +59,14 @@
         .badge-fechado { color: var(--danger-red); font-weight: bold; }
         .badge-recusa { color: var(--warning-orange); font-weight: bold; }
 
-        .secao { display: none; animation: fadeIn 0.4s; }
+        .secao { display: none; animation: fadeIn 0.4s; width: 100%; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         #loading-area { padding: 20px; color: var(--primary-blue); font-weight: bold; display: flex; align-items: center; gap: 10px; }
 
         /* Botões */
-        .btn-primary { background: var(--accent-blue); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-primary { background: var(--accent-blue); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; transition: 0.2s; white-space: nowrap; }
         .btn-primary:hover { background: #0022cc; }
-        .btn-secondary { background: #EEE; color: #333; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-secondary { background: #EEE; color: #333; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; white-space: nowrap; }
         .btn-secondary:hover { background: #DDD; }
         
         /* Ícone de Ação na Tabela */
@@ -94,8 +94,8 @@
         .form-group input { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #CCC; border-radius: 8px; font-size: 0.95rem; background-color: #FAFAFA; }
         .form-group input:focus { outline: none; border-color: var(--accent-blue); background-color: #FFF; }
         
-        .row { display: flex; gap: 15px; }
-        .col { flex: 1; }
+        .row { display: flex; gap: 15px; flex-wrap: wrap; } /* Adicionado flex-wrap para quebrar linha no mobile */
+        .col { flex: 1; min-width: 150px;} /* Adicionado min-width */
         
         .modal-actions { display: flex; gap: 10px; margin-top: 25px; }
         .modal-actions button { flex: 1; }
@@ -108,9 +108,9 @@
         .btn-text-action:hover { opacity: 0.7; }
         
         /* Estilos do Filtro de Data e Busca */
-        .filtro-container { display: flex; align-items: center; gap: 10px; background: white; padding: 5px 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); flex-wrap: wrap; }
+        .filtro-container { display: flex; align-items: center; gap: 10px; background: white; padding: 5px 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); flex-wrap: wrap; width: auto; max-width: 100%; box-sizing: border-box; }
         .filtro-label { font-weight: bold; color: var(--text-dark); font-size: 0.9rem; }
-        .filtro-input { border: 1px solid #CCC; border-radius: 6px; padding: 8px; font-family: inherit; outline: none; }
+        .filtro-input { border: 1px solid #CCC; border-radius: 6px; padding: 8px; font-family: inherit; outline: none; max-width: 100%; box-sizing: border-box;}
         .filtro-input:focus { border-color: var(--accent-blue); }
 
         /* Estilos dos Cards de KPI (Gráficos Iniciais) */
@@ -128,7 +128,7 @@
         .kpi-red { background: linear-gradient(135deg, #E53935, #C62828); }
 
         /* NOVO: Estilos do Dashboard de Gráficos Analíticos */
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; margin-top: 20px; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-top: 20px; }
         .chart-box { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .chart-box-title { font-size: 1.1rem; color: var(--text-dark); margin-bottom: 15px; font-weight: bold; text-align: center; border-bottom: 2px solid #F4F7F6; padding-bottom: 10px; }
         .canvas-container { position: relative; height: 300px; width: 100%; }
@@ -207,6 +207,87 @@
         #barra-marcadores::-webkit-scrollbar { height: 6px; }
         #barra-marcadores::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.4); border-radius: 10px; }
         #barra-marcadores::-webkit-scrollbar-track { background: transparent; }
+
+        /* ADIÇÃO: Regras de Responsividade para Celulares e Telas Menores */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column; /* Transforma o layout em coluna */
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative; /* Deixa de ser fixa ao lado */
+                padding: 15px;
+                display: flex;
+                flex-wrap: wrap; /* Permite que os botões do menu quebrem linha */
+                justify-content: center;
+                gap: 5px;
+            }
+
+            .sidebar h2, .sidebar p {
+                width: 100%; /* Força o título a ficar numa linha inteira */
+                text-align: center;
+                margin-bottom: 10px;
+            }
+
+            .menu-item {
+                margin-bottom: 0;
+                padding: 10px;
+                font-size: 0.9rem; /* Diminui um pouco a fonte do menu */
+                flex: 1; /* Faz os botões se adaptarem ao espaço */
+                min-width: 120px;
+                justify-content: center;
+            }
+            .menu-item span {
+                display: none; /* Esconde o texto no menu em telas muito pequenas, deixa só o ícone (opcional, remova se preferir com texto)*/
+            }
+            @media (min-width: 450px) {
+                .menu-item span {
+                    display: inline; /* Volta a mostrar o texto se a tela for um pouquinho maior */
+                }
+            }
+
+
+            .main-content {
+                margin-left: 0; /* Remove a margem vazia deixada pela sidebar fixa */
+                width: 100%;
+                padding: 15px; /* Reduz o padding interno */
+            }
+
+            .header-title {
+                font-size: 1.4rem; /* Reduz o título principal */
+            }
+
+            .header-action {
+                flex-direction: column; /* Coloca o botão embaixo do título se não couber */
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            /* Força os botões de ação a quebrarem a linha na hora de montar rota */
+            #sec-montar-rota .header-action > div {
+                flex-wrap: wrap;
+            }
+            
+            /* Ajuste dos gráficos no celular */
+            .dashboard-grid {
+                grid-template-columns: 1fr; /* Coloca um gráfico embaixo do outro */
+            }
+            
+            /* Ajuste do botão salvar e visualizar */
+            #sec-montar-rota .card > div:last-child {
+                flex-direction: column;
+            }
+            #sec-montar-rota .card > div:last-child button {
+                width: 100%;
+            }
+            
+            /* Permite scroll horizontal dentro da tabela no modal de selecionar clientes */
+            #sec-montar-rota .card > div[style*="max-height"] {
+                max-height: 300px !important; /* Reduz a altura para caber melhor na tela */
+            }
+        }
     </style>
 </head>
 <body>
@@ -418,7 +499,7 @@
             <div class="card">
                 <div style="margin-bottom: 20px;">
                     <label style="font-weight: bold; display: block; margin-bottom: 8px; color: var(--text-dark);">Data da Rota:</label>
-                    <input type="date" id="data-nova-rota" class="filtro-input" style="padding: 12px; font-size: 1rem; width: 250px;">
+                    <input type="date" id="data-nova-rota" class="filtro-input" style="padding: 12px; font-size: 1rem; width: 250px; max-width: 100%;">
                 </div>
 
                 <div class="header-action" style="margin-bottom: 15px;">
@@ -453,10 +534,10 @@
                 </div>
 
                 <div style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 15px;">
-                    <button class="btn-secondary" onclick="visualizarRota()" style="padding: 15px 30px; font-size: 1.1rem;">
+                    <button class="btn-secondary" onclick="visualizarRota()" style="padding: 15px 30px; font-size: 1.1rem; justify-content: center;">
                         <i class="fas fa-eye"></i> VISUALIZAR ROTA
                     </button>
-                    <button class="btn-primary" onclick="salvarNovaRota()" style="padding: 15px 30px; font-size: 1.1rem;">
+                    <button class="btn-primary" onclick="salvarNovaRota()" style="padding: 15px 30px; font-size: 1.1rem; justify-content: center;">
                         <i class="fas fa-save"></i> SALVAR NOVA ROTA
                     </button>
                 </div>
@@ -638,8 +719,8 @@
     <div id="modal-mapa" class="modal-overlay" style="z-index: 2000;">
         <div class="modal-container" style="width: 90%; height: 85%; max-width: none; display: flex; flex-direction: column; padding: 0; overflow: hidden;">
             <div class="modal-header" style="padding: 20px; background: var(--primary-blue); margin-bottom: 0; border-radius: 15px 15px 0 0; display: flex; flex-direction: column; align-items: stretch; gap: 15px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
                         <h3 style="color: white; margin: 0;">Visualização do Mapa</h3>
                         <span id="mapa-placa-display" style="display: none; background: rgba(255,255,255,0.2); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.95rem; font-weight: 500;"></span>
                     </div>
