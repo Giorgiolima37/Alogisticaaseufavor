@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel do Proprietário - Gestão da Empresa</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     
     <style>
         :root {
@@ -41,7 +45,7 @@
         .header-action { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
 
         /* Cards e Tabelas */
-        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow-x: auto; margin-bottom: 30px;}
         table { width: 100%; border-collapse: collapse; }
         th { text-align: left; padding: 15px; border-bottom: 2px solid #EEE; color: #666; font-size: 0.8rem; text-transform: uppercase; font-weight: 800; }
         td { padding: 15px; border-bottom: 1px solid #F5F5F5; font-size: 0.95rem; color: #333; }
@@ -70,6 +74,8 @@
         .btn-icon-danger:hover { color: #a00; transform: scale(1.1); }
         .btn-icon-success { color: var(--success-green); cursor: pointer; font-size: 1.2rem; transition: 0.2s; padding: 5px; }
         .btn-icon-success:hover { color: #1e7e34; transform: scale(1.1); }
+        .btn-icon-edit { color: var(--accent-blue); cursor: pointer; font-size: 1.2rem; transition: 0.2s; padding: 5px; }
+        .btn-icon-edit:hover { color: #0022cc; transform: scale(1.1); }
         .btn-icon-delete { color: #777; cursor: pointer; font-size: 1.2rem; transition: 0.2s; padding: 5px; }
         .btn-icon-delete:hover { color: #000; transform: scale(1.1); }
 
@@ -101,8 +107,8 @@
         .btn-text-action { background: none; border: none; color: var(--teal-action); font-weight: bold; font-size: 0.95rem; cursor: pointer; padding: 5px; transition: 0.2s; }
         .btn-text-action:hover { opacity: 0.7; }
         
-        /* Estilos do Filtro de Data */
-        .filtro-container { display: flex; align-items: center; gap: 10px; background: white; padding: 5px 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        /* Estilos do Filtro de Data e Busca */
+        .filtro-container { display: flex; align-items: center; gap: 10px; background: white; padding: 5px 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); flex-wrap: wrap; }
         .filtro-label { font-weight: bold; color: var(--text-dark); font-size: 0.9rem; }
         .filtro-input { border: 1px solid #CCC; border-radius: 6px; padding: 8px; font-family: inherit; outline: none; }
         .filtro-input:focus { border-color: var(--accent-blue); }
@@ -126,6 +132,81 @@
         .chart-box { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .chart-box-title { font-size: 1.1rem; color: var(--text-dark); margin-bottom: 15px; font-weight: bold; text-align: center; border-bottom: 2px solid #F4F7F6; padding-bottom: 10px; }
         .canvas-container { position: relative; height: 300px; width: 100%; }
+
+        /* Estilos do Modal de Placas e Seleção */
+        .modal-placas-container { background: white; padding: 30px; border-radius: 15px; width: 600px; max-width: 95%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 80vh; overflow-y: auto; }
+        .linha-selecionavel { cursor: pointer; transition: background-color 0.2s; }
+        .linha-selecionavel:hover { background-color: #E6F0FF; }
+        
+        /* Estilos do Checkbox customizado */
+        .checkbox-custom { width: 20px; height: 20px; cursor: pointer; }
+
+        /* Estilos para o ícone customizado do mapa (Pino Numerado) */
+        .custom-leaflet-icon {
+            background: transparent;
+            border: none;
+        }
+        .pin-mapa {
+            background-color: var(--accent-blue);
+            color: white;
+            border-radius: 50% 50% 50% 0;
+            width: 34px;
+            height: 34px;
+            transform: rotate(-45deg);
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+            border: 2px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pin-mapa span {
+            transform: rotate(45deg);
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        /* Estilos para a legenda na barra superior do modal do mapa (AGORA DRAGGABLE) */
+        .pin-barra {
+            background-color: white;
+            color: var(--primary-blue);
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            pointer-events: none; /* Impede o clique direto no número, foca no container */
+        }
+        .item-legenda-mapa {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.15);
+            padding: 6px 12px;
+            border-radius: 20px;
+            color: white;
+            white-space: nowrap;
+            border: 1px solid rgba(255,255,255,0.3);
+            cursor: grab; /* Cursor indicando que pode segurar */
+            user-select: none;
+            transition: transform 0.1s, opacity 0.1s;
+        }
+        .item-legenda-mapa:active {
+            cursor: grabbing;
+        }
+        .item-legenda-mapa.dragging {
+            opacity: 0.4;
+            border: 1px dashed #FFF;
+            background: rgba(255,255,255,0.05);
+            transform: scale(0.95);
+        }
+        
+        /* Custom scrollbar para a barra de legenda */
+        #barra-marcadores::-webkit-scrollbar { height: 6px; }
+        #barra-marcadores::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.4); border-radius: 10px; }
+        #barra-marcadores::-webkit-scrollbar-track { background: transparent; }
     </style>
 </head>
 <body>
@@ -150,6 +231,17 @@
             <i class="fas fa-truck"></i>
             <span>Gerenciar Frota</span>
         </div>
+        
+        <div class="menu-item" onclick="abrirSecao('clientes')">
+            <i class="fas fa-address-book"></i>
+            <span>Clientes</span>
+        </div>
+        
+        <div class="menu-item" onclick="abrirSecao('montar-rota')">
+            <i class="fas fa-map-marked-alt"></i>
+            <span>Montar Rota</span>
+        </div>
+
     </div>
 
     <div class="main-content">
@@ -280,6 +372,97 @@
                 </table>
             </div>
         </div>
+
+        <div id="sec-clientes" class="secao">
+            <div class="header-action" style="align-items: flex-end;">
+                <div class="header-title">Clientes</div>
+                <div class="filtro-container">
+                    <i class="fas fa-search" style="color: var(--accent-blue);"></i>
+                    <input type="text" id="filtro-cliente-nome" class="filtro-input" placeholder="Buscar por Nome..." onkeyup="filtrarClientesLocal()">
+                    <input type="text" id="filtro-cliente-cnpj" class="filtro-input" placeholder="Buscar por CNPJ..." onkeyup="filtrarClientesLocal()">
+                </div>
+            </div>
+            <div class="card">
+                <table id="tabela-clientes">
+                    <thead>
+                        <tr>
+                            <th>NOME DO ESTABELECIMENTO</th>
+                            <th>CNPJ</th>
+                            <th>RUA / NÚMERO</th>
+                            <th>BAIRRO</th>
+                            <th>MUNICÍPIO</th>
+                            <th>CEP</th>
+                            <th style="text-align: center;">AÇÕES</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="7" style="text-align: center;">Nenhum cliente carregado.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div id="sec-montar-rota" class="secao">
+            <div class="header-action" style="flex-direction: column; align-items: flex-start; gap: 15px;">
+                <div class="header-title">Montar Nova Rota</div>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <button class="btn-primary" onclick="abrirModalPlacas()" style="width: fit-content; margin: 0;">
+                        <i class="fas fa-id-card"></i> Placas
+                    </button>
+                    <span id="placa-selecionada-display" style="display: none; font-weight: bold; color: var(--accent-blue); background: #E6F0FF; padding: 10px 15px; border-radius: 8px; border: 1px dashed var(--accent-blue);"></span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="margin-bottom: 20px;">
+                    <label style="font-weight: bold; display: block; margin-bottom: 8px; color: var(--text-dark);">Data da Rota:</label>
+                    <input type="date" id="data-nova-rota" class="filtro-input" style="padding: 12px; font-size: 1rem; width: 250px;">
+                </div>
+
+                <div class="header-action" style="margin-bottom: 15px;">
+                    <h3 style="margin: 0; color: var(--text-dark);">Selecione os Clientes:</h3>
+                    <div class="filtro-container" style="box-shadow: none; border: 1px solid #DDD;">
+                        <i class="fas fa-search" style="color: #888;"></i>
+                        <input type="text" id="filtro-cliente-montar-rota" class="filtro-input" placeholder="Pesquisar cliente..." onkeyup="filtrarClientesMontarRota()" style="border: none;">
+                    </div>
+                </div>
+
+                <div style="max-height: 400px; overflow-y: auto; border: 1px solid #EEE; border-radius: 8px;">
+                    <table id="tabela-clientes-montar-rota">
+                        <thead style="position: sticky; top: 0; background: white; z-index: 1;">
+                            <tr>
+                                <th style="text-align: center; width: 50px;">
+                                    <input type="checkbox" id="check-todos" class="checkbox-custom" onclick="selecionarTodosClientes()">
+                                </th>
+                                <th>CLIENTE</th>
+                                <th>CNPJ</th>
+                                <th>RUA / NÚMERO</th>
+                                <th>BAIRRO</th>
+                                <th>MUNICÍPIO</th>
+                                <th>CEP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 20px;">Carregando lista de clientes...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 15px;">
+                    <button class="btn-secondary" onclick="visualizarRota()" style="padding: 15px 30px; font-size: 1.1rem;">
+                        <i class="fas fa-eye"></i> VISUALIZAR ROTA
+                    </button>
+                    <button class="btn-primary" onclick="salvarNovaRota()" style="padding: 15px 30px; font-size: 1.1rem;">
+                        <i class="fas fa-save"></i> SALVAR NOVA ROTA
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <div id="modal-motorista" class="modal-overlay">
@@ -368,6 +551,107 @@
         </div>
     </div>
 
+    <div id="modal-editar-cliente" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Editar Cliente</h3>
+                <i class="fas fa-times btn-close" onclick="fecharModalEditarCliente()"></i>
+            </div>
+            
+            <form id="form-editar-cliente" onsubmit="salvarEdicaoCliente(event)">
+                <input type="hidden" id="cli-id-edit">
+                <div class="form-group">
+                    <label>Nome do Estabelecimento</label>
+                    <input type="text" id="cli-nome-edit" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>CNPJ</label>
+                    <input type="text" id="cli-cnpj-edit" required disabled style="background-color: #EEE; cursor: not-allowed;" title="O CNPJ não pode ser alterado">
+                </div>
+
+                <div class="form-group">
+                    <label>Endereço Principal (Rua / Número)</label>
+                    <input type="text" id="cli-endereco-edit">
+                </div>
+
+                <div class="row">
+                    <div class="form-group col">
+                        <label>Bairro</label>
+                        <input type="text" id="cli-bairro-edit">
+                    </div>
+                    <div class="form-group col">
+                        <label>Município</label>
+                        <input type="text" id="cli-municipio-edit">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>CEP</label>
+                    <input type="text" id="cli-cep-edit" placeholder="00000-000">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="fecharModalEditarCliente()">Cancelar</button>
+                    <button type="submit" class="btn-primary" id="btn-salvar-cli" style="justify-content: center;">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-excluir-cliente" class="modal-overlay">
+        <div class="modal-container-small">
+            <h3 class="modal-confirm-title" style="color: var(--text-dark);">Excluir Cliente</h3>
+            <p id="texto-exclusao-cliente" class="modal-confirm-text">
+                Deseja realmente EXCLUIR este cliente?
+            </p>
+            <div class="modal-confirm-actions">
+                <button type="button" class="btn-text-action" style="color: #666;" onclick="fecharModalExcluirCliente()">CANCELAR</button>
+                <button type="button" class="btn-text-action" style="color: var(--danger-red);" onclick="executarExclusaoCliente()">EXCLUIR</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="modal-placas" class="modal-overlay">
+        <div class="modal-placas-container">
+            <div class="modal-header">
+                <h3>Placas Cadastradas</h3>
+                <i class="fas fa-times btn-close" onclick="fecharModalPlacas()"></i>
+            </div>
+            
+            <table id="tabela-modal-placas" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="padding: 10px; border-bottom: 1px solid #ddd;">PLACA</th>
+                        <th style="padding: 10px; border-bottom: 1px solid #ddd;">MODELO/MARCA</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="2" style="text-align: center; padding: 15px;">Carregando placas...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal-mapa" class="modal-overlay" style="z-index: 2000;">
+        <div class="modal-container" style="width: 90%; height: 85%; max-width: none; display: flex; flex-direction: column; padding: 0; overflow: hidden;">
+            <div class="modal-header" style="padding: 20px; background: var(--primary-blue); margin-bottom: 0; border-radius: 15px 15px 0 0; display: flex; flex-direction: column; align-items: stretch; gap: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <h3 style="color: white; margin: 0;">Visualização do Mapa</h3>
+                        <span id="mapa-placa-display" style="display: none; background: rgba(255,255,255,0.2); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.95rem; font-weight: 500;"></span>
+                    </div>
+                    <i class="fas fa-times btn-close" style="color: white; font-size: 1.5rem; cursor: pointer;" onclick="fecharModalMapa()"></i>
+                </div>
+                <div id="barra-marcadores" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px;">
+                </div>
+            </div>
+            <div id="map" style="flex: 1; width: 100%; z-index: 1;"></div>
+        </div>
+    </div>
+
     <script>
         // CONFIGURAÇÕES SUPABASE
         const SUPABASE_URL = 'https://heupqmwxkpsezzfnqbsb.supabase.co';
@@ -377,8 +661,9 @@
 
         const SENHA_ADMIN = '1234'; 
 
-        // Instâncias dos Gráficos
+        // Instâncias dos Gráficos e Arrays Locais
         let instGraficoStatus, instGraficoVeiculos, instGraficoTempo;
+        let listaClientesLocal = [];
 
         function formatarDataBR(dataString) {
             if (!dataString) return '--/--/----';
@@ -420,8 +705,8 @@
             
             // Variáveis para os KPIs e Gráficos
             let contadorTotal = 0, contadorSucesso = 0, contadorAvaria = 0, contadorFalha = 0;
-            let estatisticasVeiculos = {}; // Para o gráfico de Entregas por Veículo
-            let tempoPorVeiculo = {};      // Para o gráfico de Tempo por Veículo
+            let estatisticasVeiculos = {}; 
+            let tempoPorVeiculo = {};      
 
             data.forEach(rota => {
                 const motoristaNome = rota.motoristas?.nome || 'Não identificado';
@@ -441,10 +726,8 @@
                             if (dataFormatadaBanco !== filtroData) return; 
                         }
 
-                        // Lógica Analítica dos KPIs e Gráficos
                         contadorTotal++;
                         
-                        // Inicializa contadores de veículos
                         if (!estatisticasVeiculos[placaVeiculo]) estatisticasVeiculos[placaVeiculo] = 0;
                         if (!tempoPorVeiculo[placaVeiculo]) tempoPorVeiculo[placaVeiculo] = 0;
 
@@ -458,7 +741,6 @@
                             contadorFalha++;
                         }
 
-                        // Calcula o tempo do veículo extraindo "MM:SS"
                         if (entrega.tempo_permanencia) {
                             let partesTempo = entrega.tempo_permanencia.split(':');
                             if (partesTempo.length === 2) {
@@ -484,7 +766,6 @@
                 }
             });
 
-            // Atualiza os Valores na Tela (Aba Rotas)
             document.getElementById('kpi-total').innerText = contadorTotal;
             document.getElementById('kpi-sucesso').innerText = contadorSucesso;
             document.getElementById('kpi-avaria').innerText = contadorAvaria;
@@ -496,7 +777,6 @@
                 tbody.innerHTML = htmlRows;
             }
             
-            // Desenha/Atualiza os Gráficos Analíticos
             desenharGraficos(contadorSucesso, contadorAvaria, contadorFalha, estatisticasVeiculos, tempoPorVeiculo);
             
             mostrarCarregamento(false);
@@ -507,12 +787,8 @@
             carregarRotas();
         }
 
-        // ==========================================
-        // NOVO: DESENHAR GRÁFICOS DO DASHBOARD
-        // ==========================================
         function desenharGraficos(sucesso, avaria, falha, veiculosDict, tempoDict) {
             
-            // 1. Gráfico de Status (Doughnut)
             const ctxStatus = document.getElementById('graficoStatus').getContext('2d');
             if (instGraficoStatus) instGraficoStatus.destroy();
             instGraficoStatus = new Chart(ctxStatus, {
@@ -529,7 +805,6 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
             });
 
-            // 2. Gráfico Veículos Mais Usados (Bar)
             const labelsVeiculos = Object.keys(veiculosDict);
             const dadosVeiculos = Object.values(veiculosDict);
             const ctxVeiculos = document.getElementById('graficoVeiculos').getContext('2d');
@@ -548,9 +823,7 @@
                 options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
             });
 
-            // 3. Gráfico Tempo em Rota (Bar)
             const labelsTempo = Object.keys(tempoDict);
-            // Arredonda os minutos para 1 casa decimal
             const dadosTempo = Object.values(tempoDict).map(v => v.toFixed(1)); 
             const ctxTempo = document.getElementById('graficoTempo').getContext('2d');
             if (instGraficoTempo) instGraficoTempo.destroy();
@@ -603,24 +876,13 @@
             mostrarCarregamento(false);
         }
 
-        // ==========================================
-        // LÓGICA DO MODAL DE MOTORISTAS E MÁSCARAS
-        // ==========================================
-        function abrirModalMotorista() {
-            document.getElementById('modal-motorista').style.display = 'flex';
-        }
-
-        function fecharModalMotorista() {
-            document.getElementById('modal-motorista').style.display = 'none';
-            document.getElementById('form-motorista').reset();
-        }
+        function abrirModalMotorista() { document.getElementById('modal-motorista').style.display = 'flex'; }
+        function fecharModalMotorista() { document.getElementById('modal-motorista').style.display = 'none'; document.getElementById('form-motorista').reset(); }
 
         async function salvarMotorista(event) {
             event.preventDefault(); 
-            
             const btnSalvar = document.getElementById('btn-salvar-mot');
-            btnSalvar.innerText = 'Salvando...';
-            btnSalvar.disabled = true;
+            btnSalvar.innerText = 'Salvando...'; btnSalvar.disabled = true;
 
             const nome = document.getElementById('mot-nome').value;
             const idade = document.getElementById('mot-idade').value;
@@ -629,139 +891,64 @@
             const senha = document.getElementById('mot-senha').value;
 
             const { error } = await _supabase.from('motoristas').insert([{
-                nome: nome,
-                idade: idade ? parseInt(idade) : null,
-                documento: documento,
-                toxicologico: toxicologico,
-                senha: senha,
-                ativo: true 
+                nome: nome, idade: idade ? parseInt(idade) : null, documento: documento, toxicologico: toxicologico, senha: senha, ativo: true 
             }]);
 
-            btnSalvar.innerText = 'Salvar Motorista';
-            btnSalvar.disabled = false;
+            btnSalvar.innerText = 'Salvar Motorista'; btnSalvar.disabled = false;
 
-            if (error) {
-                alert("Erro ao salvar o motorista: " + error.message);
-            } else {
-                fecharModalMotorista(); 
-                carregarMotoristas(); 
-            }
+            if (error) alert("Erro ao salvar: " + error.message);
+            else { fecharModalMotorista(); carregarMotoristas(); }
         }
 
-        // ==========================================
-        // LÓGICA DE DESLIGAMENTO DE MOTORISTA
-        // ==========================================
         let motoristaIdParaDesligar = null;
-
         function confirmarDesligamento(id, nome) {
             motoristaIdParaDesligar = id;
             document.getElementById('texto-confirmacao').innerText = `Deseja DESLIGAR o motorista ${nome}? Ele perderá o acesso, mas o histórico será mantido.`;
             document.getElementById('modal-confirmacao').style.display = 'flex';
         }
-
-        function fecharModalConfirmacao() {
-            document.getElementById('modal-confirmacao').style.display = 'none';
-            motoristaIdParaDesligar = null;
-        }
+        function fecharModalConfirmacao() { document.getElementById('modal-confirmacao').style.display = 'none'; motoristaIdParaDesligar = null; }
 
         async function executarDesligamento() {
             if(!motoristaIdParaDesligar) return;
-            
             mostrarCarregamento(true);
-            
-            const { error } = await _supabase
-                .from('motoristas')
-                .update({ ativo: false })
-                .eq('id', motoristaIdParaDesligar);
-                
-            if(error) {
-                alert("Erro ao desligar motorista: " + error.message);
-                mostrarCarregamento(false);
-            } else {
-                fecharModalConfirmacao();
-                carregarMotoristas(); 
-                carregarRotas(); 
-            }
+            const { error } = await _supabase.from('motoristas').update({ ativo: false }).eq('id', motoristaIdParaDesligar);
+            if(error) { alert("Erro: " + error.message); mostrarCarregamento(false); }
+            else { fecharModalConfirmacao(); carregarMotoristas(); carregarRotas(); }
         }
 
-        // ==========================================
-        // LÓGICA DE REATIVAÇÃO DE MOTORISTA COM SENHA
-        // ==========================================
         let motoristaIdParaReativar = null;
-
         function confirmarReativacao(id, nome) {
             motoristaIdParaReativar = id;
             document.getElementById('texto-reativar').innerHTML = `Digite a senha administrativa para reativar o acesso de <b>${nome}</b>.`;
             document.getElementById('modal-reativar').style.display = 'flex';
         }
-
-        function fecharModalReativar() {
-            document.getElementById('modal-reativar').style.display = 'none';
-            document.getElementById('input-senha-reativar').value = ''; 
-            motoristaIdParaReativar = null;
-        }
+        function fecharModalReativar() { document.getElementById('modal-reativar').style.display = 'none'; document.getElementById('input-senha-reativar').value = ''; motoristaIdParaReativar = null; }
 
         async function executarReativacao(event) {
             event.preventDefault(); 
             if(!motoristaIdParaReativar) return;
-
             const senhaDigitada = document.getElementById('input-senha-reativar').value;
-
-            if(senhaDigitada !== SENHA_ADMIN) {
-                alert('Acesso Negado: Senha administrativa incorreta.');
-                return;
-            }
-            
+            if(senhaDigitada !== SENHA_ADMIN) { alert('Senha incorreta.'); return; }
             mostrarCarregamento(true);
-            
-            const { error } = await _supabase
-                .from('motoristas')
-                .update({ ativo: true })
-                .eq('id', motoristaIdParaReativar);
-                
-            if(error) {
-                alert("Erro ao reativar motorista: " + error.message);
-                mostrarCarregamento(false);
-            } else {
-                fecharModalReativar();
-                carregarMotoristas(); 
-                carregarRotas(); 
-            }
+            const { error } = await _supabase.from('motoristas').update({ ativo: true }).eq('id', motoristaIdParaReativar);
+            if(error) { alert("Erro: " + error.message); mostrarCarregamento(false); }
+            else { fecharModalReativar(); carregarMotoristas(); carregarRotas(); }
         }
 
-        // ==========================================
-        // LÓGICA DE EXCLUSÃO DEFINITIVA DO MOTORISTA
-        // ==========================================
         let motoristaIdParaExcluir = null;
-
         function confirmarExclusao(id, nome) {
             motoristaIdParaExcluir = id;
-            document.getElementById('texto-exclusao').innerHTML = `Deseja realmente EXCLUIR o motorista <b>${nome}</b>? Esta ação é irreversível e apagará o cadastro do sistema.`;
+            document.getElementById('texto-exclusao').innerHTML = `Deseja realmente EXCLUIR o motorista <b>${nome}</b>? Esta ação é irreversível.`;
             document.getElementById('modal-exclusao').style.display = 'flex';
         }
-
-        function fecharModalExclusao() {
-            document.getElementById('modal-exclusao').style.display = 'none';
-            motoristaIdParaExcluir = null;
-        }
+        function fecharModalExclusao() { document.getElementById('modal-exclusao').style.display = 'none'; motoristaIdParaExcluir = null; }
 
         async function executarExclusao() {
             if(!motoristaIdParaExcluir) return;
-            
             mostrarCarregamento(true);
-            
-            const { error } = await _supabase
-                .from('motoristas')
-                .delete()
-                .eq('id', motoristaIdParaExcluir);
-                
-            if(error) {
-                alert("Erro ao excluir. O motorista pode possuir rotas atreladas a ele no histórico. Considere apenas Desligar.\n\nDetalhe do banco: " + error.message);
-                mostrarCarregamento(false);
-            } else {
-                fecharModalExclusao();
-                carregarMotoristas(); 
-            }
+            const { error } = await _supabase.from('motoristas').delete().eq('id', motoristaIdParaExcluir);
+            if(error) { alert("Erro ao excluir. Motorista pode ter histórico. \nDetalhe: " + error.message); mostrarCarregamento(false); }
+            else { fecharModalExclusao(); carregarMotoristas(); }
         }
 
         // ==========================================
@@ -785,6 +972,544 @@
         }
 
         // ==========================================
+        // 4. CARREGAR E FILTRAR CLIENTES (COM EDIÇÃO E EXCLUSÃO E COLUNAS SEPARADAS)
+        // ==========================================
+        async function carregarClientes() {
+            mostrarCarregamento(true);
+            
+            const { data, error } = await _supabase
+                .from('entregas')
+                .select('id, estabelecimento, cnpj, endereco, bairro, municipio, cep, horario_abre_1, horario_fecha_1, horario_abre_2, horario_fecha_2')
+                .order('estabelecimento', { ascending: true });
+
+            if (error) {
+                console.error("Erro ao buscar clientes:", error);
+                mostrarCarregamento(false);
+                return;
+            }
+
+            listaClientesLocal = data; // Salva na memória para usar o filtro rápido
+            
+            // Renderiza na aba Clientes
+            renderizarTabelaClientes(listaClientesLocal);
+            
+            // Também renderiza na aba Montar Rota
+            renderizarTabelaMontarRota(listaClientesLocal);
+            
+            mostrarCarregamento(false);
+        }
+
+        function renderizarTabelaClientes(dados) {
+            const tbody = document.querySelector('#tabela-clientes tbody');
+            
+            if (dados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nenhum cliente encontrado.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = dados.map(cliente => {
+                // Transformando o objeto cliente em string para passar na função do clique (escapando aspas)
+                const cliEdit = JSON.stringify(cliente).replace(/"/g, '&quot;');
+
+                return `
+                <tr>
+                    <td><b>${cliente.estabelecimento || '--'}</b></td>
+                    <td>${cliente.cnpj || '--'}</td>
+                    <td>${cliente.endereco || '--'}</td>
+                    <td>${cliente.bairro || '--'}</td>
+                    <td>${cliente.municipio || '--'}</td>
+                    <td>${cliente.cep || '--'}</td>
+                    <td style="text-align: center;">
+                        <div style="display: flex; justify-content: center; gap: 15px;">
+                            <i class="fas fa-edit btn-icon-edit" title="Editar Cliente" onclick="abrirModalEditarCliente(${cliEdit})"></i>
+                            <i class="fas fa-trash-alt btn-icon-delete" title="Excluir Cliente" onclick="confirmarExclusaoCliente('${cliente.id}', '${cliente.estabelecimento}')"></i>
+                        </div>
+                    </td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        function filtrarClientesLocal() {
+            const termoNome = document.getElementById('filtro-cliente-nome').value.toLowerCase();
+            const termoCnpj = document.getElementById('filtro-cliente-cnpj').value.replace(/\D/g, ''); 
+
+            const dadosFiltrados = listaClientesLocal.filter(cliente => {
+                const nomeMatch = (cliente.estabelecimento || '').toLowerCase().includes(termoNome);
+                const cnpjLimpoBanco = (cliente.cnpj || '').replace(/\D/g, '');
+                const cnpjMatch = cnpjLimpoBanco.includes(termoCnpj);
+                return nomeMatch && cnpjMatch;
+            });
+
+            renderizarTabelaClientes(dadosFiltrados);
+        }
+
+        // ==========================================
+        // LÓGICA DE EDIÇÃO E EXCLUSÃO DO CLIENTE
+        // ==========================================
+        
+        function aplicarMascaraCNPJParaInput(v) {
+            v = v.replace(/\D/g, "");
+            v = v.replace(/^(\d{2})(\d)/, "$1.$2");
+            v = v.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
+            v = v.replace(/\.(\d{3})(\d)/, ".$1/$2");
+            v = v.replace(/(\d{4})(\d)/, "$1-$2");
+            return v.substring(0, 18);
+        }
+        
+        function aplicarMascaraCEPParaInput(v) {
+            v = v.replace(/\D/g, "");
+            v = v.replace(/^(\d{5})(\d)/, "$1-$2");
+            return v.substring(0, 9);
+        }
+
+        function abrirModalEditarCliente(cliente) {
+            document.getElementById('cli-id-edit').value = cliente.id;
+            document.getElementById('cli-nome-edit').value = cliente.estabelecimento || '';
+            document.getElementById('cli-cnpj-edit').value = aplicarMascaraCNPJParaInput(cliente.cnpj || '');
+            document.getElementById('cli-endereco-edit').value = cliente.endereco || '';
+            document.getElementById('cli-bairro-edit').value = cliente.bairro || '';
+            document.getElementById('cli-municipio-edit').value = cliente.municipio || '';
+            document.getElementById('cli-cep-edit').value = aplicarMascaraCEPParaInput(cliente.cep || '');
+            
+            document.getElementById('modal-editar-cliente').style.display = 'flex';
+        }
+
+        function fecharModalEditarCliente() {
+            document.getElementById('modal-editar-cliente').style.display = 'none';
+            document.getElementById('form-editar-cliente').reset();
+        }
+
+        async function salvarEdicaoCliente(event) {
+            event.preventDefault();
+            
+            const btnSalvar = document.getElementById('btn-salvar-cli');
+            btnSalvar.innerText = 'Salvando...';
+            btnSalvar.disabled = true;
+
+            const id = document.getElementById('cli-id-edit').value;
+            const nome = document.getElementById('cli-nome-edit').value;
+            const endereco = document.getElementById('cli-endereco-edit').value;
+            const bairro = document.getElementById('cli-bairro-edit').value;
+            const municipio = document.getElementById('cli-municipio-edit').value;
+            const cep = document.getElementById('cli-cep-edit').value;
+
+            const { error } = await _supabase
+                .from('entregas')
+                .update({
+                    estabelecimento: nome,
+                    endereco: endereco,
+                    bairro: bairro,
+                    municipio: municipio,
+                    cep: cep
+                })
+                .eq('id', id);
+
+            btnSalvar.innerText = 'Salvar Alterações';
+            btnSalvar.disabled = false;
+
+            if (error) {
+                alert("Erro ao atualizar o cliente: " + error.message);
+            } else {
+                fecharModalEditarCliente();
+                carregarClientes(); 
+            }
+        }
+
+        let clienteIdParaExcluir = null;
+
+        function confirmarExclusaoCliente(id, nome) {
+            clienteIdParaExcluir = id;
+            document.getElementById('texto-exclusao-cliente').innerHTML = `Deseja realmente EXCLUIR o cliente <b>${nome}</b> do banco de dados?`;
+            document.getElementById('modal-excluir-cliente').style.display = 'flex';
+        }
+
+        function fecharModalExcluirCliente() {
+            document.getElementById('modal-excluir-cliente').style.display = 'none';
+            clienteIdParaExcluir = null;
+        }
+
+        async function executarExclusaoCliente() {
+            if (!clienteIdParaExcluir) return;
+            
+            mostrarCarregamento(true);
+            
+            const { error } = await _supabase
+                .from('entregas')
+                .delete()
+                .eq('id', clienteIdParaExcluir);
+                
+            if (error) {
+                alert("Erro ao excluir o cliente: " + error.message);
+                mostrarCarregamento(false);
+            } else {
+                fecharModalExcluirCliente();
+                carregarClientes(); 
+            }
+        }
+        
+        // ==========================================
+        // 5. MODAL DE PLACAS NA SEÇÃO MONTAR ROTA
+        // ==========================================
+        let placaSelecionadaNovaRota = ''; 
+
+        async function abrirModalPlacas() {
+            document.getElementById('modal-placas').style.display = 'flex';
+            const tbody = document.querySelector('#tabela-modal-placas tbody');
+            tbody.innerHTML = '<tr><td colspan="2" style="text-align: center; padding: 15px;">Carregando...</td></tr>';
+            
+            const { data, error } = await _supabase
+                .from('veiculos')
+                .select('placa, modelo')
+                .order('placa', { ascending: true });
+
+            if (error) {
+                console.error("Erro ao buscar placas:", error);
+                tbody.innerHTML = '<tr><td colspan="2" style="text-align: center; padding: 15px; color: red;">Erro ao carregar.</td></tr>';
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="2" style="text-align: center; padding: 15px;">Nenhuma placa cadastrada no sistema.</td></tr>';
+            } else {
+                tbody.innerHTML = data.map(v => `
+                    <tr class="linha-selecionavel" onclick="selecionarPlacaNovaRota('${v.placa}')">
+                        <td style="padding: 10px; border-bottom: 1px solid #eee;"><b>${v.placa || '--'}</b></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee;">${v.modelo || '--'}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function fecharModalPlacas() {
+            document.getElementById('modal-placas').style.display = 'none';
+        }
+
+        function selecionarPlacaNovaRota(placa) {
+            placaSelecionadaNovaRota = placa;
+            const display = document.getElementById('placa-selecionada-display');
+            display.innerHTML = `<i class="fas fa-truck"></i> Veículo Selecionado: ${placa}`;
+            display.style.display = 'block'; 
+            fecharModalPlacas();
+        }
+
+        // ==========================================
+        // 6. LÓGICA DE SELEÇÃO E CRIAÇÃO DE NOVA ROTA
+        // ==========================================
+        
+        function renderizarTabelaMontarRota(dados) {
+            const tbody = document.querySelector('#tabela-clientes-montar-rota tbody');
+            
+            if (dados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nenhum cliente disponível.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = dados.map(cliente => {
+                const cliValue = JSON.stringify(cliente).replace(/"/g, '&quot;');
+
+                return `
+                <tr>
+                    <td style="text-align: center;">
+                        <input type="checkbox" class="checkbox-custom checkbox-cliente-rota" value="${cliValue}">
+                    </td>
+                    <td><b>${cliente.estabelecimento || '--'}</b></td>
+                    <td>${cliente.cnpj || '--'}</td>
+                    <td>${cliente.endereco || '--'}</td>
+                    <td>${cliente.bairro || '--'}</td>
+                    <td>${cliente.municipio || '--'}</td>
+                    <td>${cliente.cep || '--'}</td>
+                </tr>
+                `;
+            }).join('');
+            
+            document.getElementById('check-todos').checked = false;
+        }
+        
+        function filtrarClientesMontarRota() {
+            const termo = document.getElementById('filtro-cliente-montar-rota').value.toLowerCase();
+            
+            const dadosFiltrados = listaClientesLocal.filter(cliente => {
+                const nomeMatch = (cliente.estabelecimento || '').toLowerCase().includes(termo);
+                const cnpjMatch = (cliente.cnpj || '').includes(termo);
+                return nomeMatch || cnpjMatch;
+            });
+
+            renderizarTabelaMontarRota(dadosFiltrados);
+        }
+        
+        function selecionarTodosClientes() {
+            const masterCheckbox = document.getElementById('check-todos');
+            const checkboxes = document.querySelectorAll('.checkbox-cliente-rota');
+            
+            checkboxes.forEach(cb => {
+                cb.checked = masterCheckbox.checked;
+            });
+        }
+        
+        // --- FUNÇÕES DO NOVO MAPA COM PINOS E DRAG AND DROP ---
+        let mapInstance = null;
+        let mapMarkersGroup = null;
+        let rotasMapeadas = []; // Guarda a lista de rotas ordenadas no mapa
+
+        async function visualizarRota() {
+            const checkboxes = document.querySelectorAll('.checkbox-cliente-rota:checked');
+            
+            if (checkboxes.length === 0) {
+                alert("Atenção: Você precisa selecionar pelo menos um cliente para visualizar no mapa.");
+                return;
+            }
+
+            // ATUALIZAÇÃO: Adiciona a placa selecionada ao cabeçalho do mapa
+            const placaDisplayMapa = document.getElementById('mapa-placa-display');
+            if (placaSelecionadaNovaRota) {
+                placaDisplayMapa.innerHTML = `<i class="fas fa-truck"></i> Veículo: ${placaSelecionadaNovaRota}`;
+                placaDisplayMapa.style.display = 'block';
+            } else {
+                placaDisplayMapa.style.display = 'none';
+            }
+
+            document.getElementById('modal-mapa').style.display = 'flex';
+            rotasMapeadas = []; // Reseta a ordem
+
+            if (!mapInstance) {
+                mapInstance = L.map('map').setView([-27.5969, -48.5495], 10);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '© OpenStreetMap'
+                }).addTo(mapInstance);
+                mapMarkersGroup = L.featureGroup().addTo(mapInstance);
+            } else {
+                setTimeout(() => { mapInstance.invalidateSize(); }, 100);
+            }
+
+            mostrarCarregamento(true);
+
+            let enderecosNaoEncontrados = 0;
+
+            for (let i = 0; i < checkboxes.length; i++) {
+                const clienteData = JSON.parse(checkboxes[i].value);
+                let enderecoBusca = `${clienteData.endereco}, ${clienteData.municipio || ''}, Santa Catarina, Brasil`;
+                
+                try {
+                    if(i > 0) await new Promise(resolve => setTimeout(resolve, 1000));
+
+                    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(enderecoBusca)}&limit=1`);
+                    const data = await response.json();
+
+                    if (data && data.length > 0) {
+                        rotasMapeadas.push({
+                            lat: parseFloat(data[0].lat),
+                            lon: parseFloat(data[0].lon),
+                            clienteData: clienteData,
+                            found: true
+                        });
+                    } else {
+                        enderecosNaoEncontrados++;
+                        rotasMapeadas.push({
+                            lat: null, lon: null,
+                            clienteData: clienteData,
+                            found: false
+                        });
+                        console.warn("Endereço não encontrado para gerar pino:", enderecoBusca);
+                    }
+                } catch(e) {
+                    console.error("Erro na busca de geolocalização:", e);
+                    enderecosNaoEncontrados++;
+                    rotasMapeadas.push({ lat: null, lon: null, clienteData: clienteData, found: false });
+                }
+            }
+
+            mostrarCarregamento(false);
+            renderizarMapaELegenda(); // Chama a função que desenha os pinos e a legenda
+
+            if (mapMarkersGroup.getLayers().length > 0) {
+                mapInstance.fitBounds(mapMarkersGroup.getBounds(), { padding: [50, 50] });
+            }
+
+            if (enderecosNaoEncontrados > 0) {
+                alert(`Aviso: ${enderecosNaoEncontrados} endereço(s) selecionado(s) não puderam ser localizados com exatidão no mapa. No entanto, eles foram adicionados na legenda e você pode arrastá-los normalmente.`);
+            }
+        }
+
+        function renderizarMapaELegenda() {
+            mapMarkersGroup.clearLayers();
+            const barraMarcadores = document.getElementById('barra-marcadores');
+            barraMarcadores.innerHTML = '';
+
+            rotasMapeadas.forEach((rota, index) => {
+                const numero = index + 1;
+
+                // Desenha o pino no mapa (se o endereço foi encontrado)
+                if (rota.found) {
+                    const numIcon = L.divIcon({
+                        className: 'custom-leaflet-icon',
+                        html: `<div class="pin-mapa"><span>${numero}</span></div>`,
+                        iconSize: [34, 34],
+                        iconAnchor: [17, 34], 
+                        popupAnchor: [0, -34] 
+                    });
+                    
+                    const marker = L.marker([rota.lat, rota.lon], { icon: numIcon })
+                        .bindPopup(`<b>${numero}. ${rota.clienteData.estabelecimento}</b><br>${rota.clienteData.endereco}<br>${rota.clienteData.bairro || ''} - ${rota.clienteData.municipio || ''}`);
+                    
+                    mapMarkersGroup.addLayer(marker);
+                }
+
+                // Cria a legenda arrastável na barra superior
+                const legendaItem = document.createElement('div');
+                legendaItem.className = 'item-legenda-mapa';
+                legendaItem.draggable = true;
+                legendaItem.setAttribute('data-original-index', index);
+                legendaItem.innerHTML = `
+                    <div class="pin-barra">${numero}</div>
+                    <span style="font-size: 0.9rem; font-weight: 500;">${rota.clienteData.estabelecimento} ${!rota.found ? '(S/ Pino)' : ''}</span>
+                `;
+                barraMarcadores.appendChild(legendaItem);
+            });
+
+            inicializarDragAndDrop();
+        }
+
+        // Lógica de Arrastar e Soltar (Drag and Drop)
+        function inicializarDragAndDrop() {
+            const items = document.querySelectorAll('.item-legenda-mapa');
+            const container = document.getElementById('barra-marcadores');
+
+            items.forEach(item => {
+                item.addEventListener('dragstart', (e) => {
+                    item.classList.add('dragging');
+                    if(e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+                });
+                
+                item.addEventListener('dragend', () => {
+                    item.classList.remove('dragging');
+                    atualizarOrdemRotas(); // Assim que soltar, atualiza a ordem de tudo
+                });
+            });
+
+            // Remove antigos listeners para evitar duplicação (se houver) e adiciona o novo
+            container.ondragover = e => {
+                e.preventDefault(); // Necessário para permitir o drop
+                const afterElement = getDragAfterElement(container, e.clientX);
+                const draggable = document.querySelector('.dragging');
+                if (draggable) {
+                    if (afterElement == null) {
+                        container.appendChild(draggable);
+                    } else {
+                        container.insertBefore(draggable, afterElement);
+                    }
+                }
+            };
+        }
+
+        function getDragAfterElement(container, x) {
+            const draggableElements = [...container.querySelectorAll('.item-legenda-mapa:not(.dragging)')];
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = x - box.left - box.width / 2; // Metade do elemento
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        function atualizarOrdemRotas() {
+            const items = document.querySelectorAll('.item-legenda-mapa');
+            const novaOrdem = [];
+            
+            // Puxa as informações da array original seguindo a nova ordem visual do HTML
+            items.forEach(item => {
+                const originalIndex = parseInt(item.getAttribute('data-original-index'));
+                novaOrdem.push(rotasMapeadas[originalIndex]);
+            });
+            
+            rotasMapeadas = novaOrdem;
+            renderizarMapaELegenda(); // Redesenha a tela com a numeração e mapa corrigidos!
+        }
+
+        function fecharModalMapa() {
+            document.getElementById('modal-mapa').style.display = 'none';
+        }
+        
+        async function salvarNovaRota() {
+            const dataEscolhida = document.getElementById('data-nova-rota').value;
+            if (!dataEscolhida) { alert("Atenção: Você precisa selecionar a Data da Rota."); return; }
+
+            if (!placaSelecionadaNovaRota) { alert("Atenção: Você precisa selecionar uma Placa para o veículo desta rota."); return; }
+            
+            const checkboxes = document.querySelectorAll('.checkbox-cliente-rota:checked');
+            if (checkboxes.length === 0) { alert("Atenção: Você precisa selecionar pelo menos um cliente para a rota."); return; }
+            
+            mostrarCarregamento(true);
+
+            let clientesParaSalvar = [];
+            
+            // SE o usuário abriu o mapa e a array rotasMapeadas tem o mesmo tamanho de itens selecionados, 
+            // significa que ele pode ter ordenado lá. Usamos a ordem do mapa!
+            if (rotasMapeadas && rotasMapeadas.length === checkboxes.length) {
+                clientesParaSalvar = rotasMapeadas.map(r => r.clienteData);
+            } else {
+                // Caso contrário (se nem abriu o mapa), pega a ordem normal das caixinhas marcadas.
+                clientesParaSalvar = Array.from(checkboxes).map(cb => JSON.parse(cb.value));
+            }
+            
+            // Formata no padrão do App
+            const listaParaApp = clientesParaSalvar.map(clienteData => {
+                let enderecoFormatado = clienteData.endereco || '';
+                if(clienteData.bairro) enderecoFormatado += ` - ${clienteData.bairro}`;
+                if(clienteData.municipio) enderecoFormatado += ` / ${clienteData.municipio}`;
+                if(clienteData.cep) enderecoFormatado += ` - CEP: ${clienteData.cep}`;
+
+                return {
+                    estabelecimento: clienteData.estabelecimento,
+                    cnpj: clienteData.cnpj,
+                    endereco: enderecoFormatado,
+                    bairro: clienteData.bairro,
+                    municipio: clienteData.municipio,
+                    cep: clienteData.cep,
+                    horario_abre_1: clienteData.horario_abre_1 || '',
+                    horario_fecha_1: clienteData.horario_fecha_1 || '',
+                    horario_abre_2: clienteData.horario_abre_2 || '',
+                    horario_fecha_2: clienteData.horario_fecha_2 || '',
+                    concluido: false,
+                    status: null
+                };
+            });
+            
+            const { data: veiculoData } = await _supabase.from('veiculos').select('motorista_atual_id').eq('placa', placaSelecionadaNovaRota).single();
+            const idMotorista = veiculoData ? veiculoData.motorista_atual_id : null;
+
+            const { error } = await _supabase.from('rotas_diarias').insert([{
+                veiculo_placa: placaSelecionadaNovaRota,
+                motorista_id: idMotorista,
+                data_inicio: dataEscolhida,
+                status: 'em_andamento',
+                lista_entregas: listaParaApp
+            }]);
+
+            mostrarCarregamento(false);
+
+            if (error) {
+                alert("Erro ao criar a rota: " + error.message);
+            } else {
+                alert("Rota criada e enviada com sucesso! O motorista já poderá visualizar as entregas no aplicativo.");
+                
+                document.getElementById('data-nova-rota').value = '';
+                document.getElementById('filtro-cliente-montar-rota').value = '';
+                document.getElementById('check-todos').checked = false;
+                placaSelecionadaNovaRota = '';
+                document.getElementById('placa-selecionada-display').style.display = 'none';
+                rotasMapeadas = []; // Limpa cache do mapa após salvar
+                
+                renderizarTabelaMontarRota(listaClientesLocal);
+            }
+        }
+
+
+        // ==========================================
         // UTILITÁRIOS, NAVEGAÇÃO E EVENTOS
         // ==========================================
         function mostrarCarregamento(mostrar) {
@@ -799,12 +1524,16 @@
             if(id === 'rotas') carregarRotas();
             if(id === 'frota') carregarFrota();
             
-            // NOVO: Também atualiza as rotas em background para preencher o Dashboard Analítico ao abri-lo
+            // Ao abrir a tela de clientes ou a tela de montar rota, precisamos garantir que a base de clientes está baixada
+            if(id === 'clientes' || id === 'montar-rota') {
+                carregarClientes();
+            }
+            
             if(id === 'dashboard') carregarRotas(); 
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            abrirSecao('dashboard'); // Agora o painel inicia na visão do Dashboard!
+            abrirSecao('dashboard'); 
             
             // --- INÍCIO DAS MÁSCARAS DE FORMULÁRIO ---
             
@@ -835,6 +1564,16 @@
                 valor = valor.replace(/(\d{2})(\d)/, "$1/$2");
                 
                 e.target.value = valor;
+            });
+
+            // Adiciona a máscara de CNPJ no campo de busca ao vivo
+            document.getElementById('filtro-cliente-cnpj').addEventListener('input', function(e) {
+                 e.target.value = aplicarMascaraCNPJParaInput(e.target.value);
+            });
+            
+            // Adiciona a máscara de CEP no modal de edição
+            document.getElementById('cli-cep-edit').addEventListener('input', function(e) {
+                 e.target.value = aplicarMascaraCEPParaInput(e.target.value);
             });
             
             // --- FIM DAS MÁSCARAS ---
