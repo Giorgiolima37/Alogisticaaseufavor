@@ -202,11 +202,35 @@
             background: rgba(255,255,255,0.05);
             transform: scale(0.95);
         }
+
+        /* Estilo do botão de excluir item na legenda do mapa */
+        .btn-remover-legenda {
+            margin-left: 8px;
+            color: #ffb3b3;
+            cursor: pointer;
+            transition: color 0.2s, transform 0.2s;
+            font-size: 1.1rem;
+        }
+        .btn-remover-legenda:hover {
+            color: #ff4444;
+            transform: scale(1.2);
+        }
         
         /* Custom scrollbar para a barra de legenda */
         #barra-marcadores::-webkit-scrollbar { height: 6px; }
         #barra-marcadores::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.4); border-radius: 10px; }
         #barra-marcadores::-webkit-scrollbar-track { background: transparent; }
+
+        /* Estilos Detalhes Rota */
+        .detalhes-info-row { display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #eee; }
+        .detalhes-info-label { font-weight: bold; color: #666; font-size: 0.9rem; }
+        .detalhes-info-value { font-weight: 500; color: #333; font-size: 0.95rem; }
+        .lista-entregas-detalhe { margin-top: 20px; max-height: 350px; overflow-y: auto; border: 1px solid #EEE; border-radius: 8px; }
+        .lista-entregas-detalhe li { padding: 15px; border-bottom: 1px solid #F5F5F5; list-style: none; display: flex; flex-direction: column; gap: 5px; }
+        .lista-entregas-detalhe li:last-child { border-bottom: none; }
+        .entrega-estabelecimento { font-weight: bold; color: var(--accent-blue); font-size: 1rem; }
+        .entrega-endereco { color: #555; font-size: 0.85rem; }
+        .entrega-cnpj { color: #888; font-size: 0.8rem; }
 
         /* ADIÇÃO: Regras de Responsividade para Celulares e Telas Menores */
         @media (max-width: 768px) {
@@ -321,6 +345,11 @@
         <div class="menu-item" onclick="abrirSecao('montar-rota')">
             <i class="fas fa-map-marked-alt"></i>
             <span>Montar Rota</span>
+        </div>
+
+        <div class="menu-item" onclick="abrirSecao('rotas-prontas')">
+            <i class="fas fa-route"></i>
+            <span>Rotas prontas</span>
         </div>
 
     </div>
@@ -544,6 +573,31 @@
             </div>
         </div>
 
+        <div id="sec-rotas-prontas" class="secao">
+            <div class="header-action">
+                <div class="header-title" style="color: var(--accent-blue);">Rotas Prontas</div>
+            </div>
+            
+            <div class="card">
+                <table id="tabela-rotas-prontas">
+                    <thead>
+                        <tr>
+                            <th>DATA DA ROTA</th>
+                            <th>PLACA DO VEÍCULO</th>
+                            <th>QTD ENTREGAS</th>
+                            <th>STATUS</th>
+                            <th style="text-align: center;">AÇÕES</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="5" style="text-align: center;">Carregando rotas prontas...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 
     <div id="modal-motorista" class="modal-overlay">
@@ -733,6 +787,35 @@
         </div>
     </div>
 
+    <div id="modal-detalhes-rota" class="modal-overlay">
+        <div class="modal-container" style="width: 600px;">
+            <div class="modal-header">
+                <h3>Detalhes da Rota</h3>
+                <i class="fas fa-times btn-close" onclick="fecharModalDetalhesRota()"></i>
+            </div>
+            
+            <div id="conteudo-detalhes-rota">
+                </div>
+
+            <div class="modal-actions" style="justify-content: flex-end; display: flex;">
+                <button type="button" class="btn-secondary" onclick="fecharModalDetalhesRota()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-excluir-rota" class="modal-overlay">
+        <div class="modal-container-small">
+            <h3 class="modal-confirm-title" style="color: var(--text-dark);">Excluir Rota</h3>
+            <p id="texto-exclusao-rota" class="modal-confirm-text">
+                Deseja realmente EXCLUIR esta rota? Esta ação não pode ser desfeita.
+            </p>
+            <div class="modal-confirm-actions">
+                <button type="button" class="btn-text-action" style="color: #666;" onclick="fecharModalExcluirRota()">CANCELAR</button>
+                <button type="button" class="btn-text-action" style="color: var(--danger-red);" onclick="executarExclusaoRota()">EXCLUIR</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // CONFIGURAÇÕES SUPABASE
         const SUPABASE_URL = 'https://heupqmwxkpsezzfnqbsb.supabase.co';
@@ -748,6 +831,11 @@
 
         function formatarDataBR(dataString) {
             if (!dataString) return '--/--/----';
+            // Ajuste para evitar erro de timezone mudando o dia
+            const partes = dataString.split('-');
+            if (partes.length === 3) {
+                return `${partes[2]}/${partes[1]}/${partes[0]}`;
+            }
             const data = new Date(dataString);
             return data.toLocaleDateString('pt-BR');
         }
@@ -787,7 +875,7 @@
             // Variáveis para os KPIs e Gráficos
             let contadorTotal = 0, contadorSucesso = 0, contadorAvaria = 0, contadorFalha = 0;
             let estatisticasVeiculos = {}; 
-            let tempoPorVeiculo = {};      
+            let tempoPorVeiculo = {};       
 
             data.forEach(rota => {
                 const motoristaNome = rota.motoristas?.nome || 'Não identificado';
@@ -1437,7 +1525,7 @@
                     mapMarkersGroup.addLayer(marker);
                 }
 
-                // Cria a legenda arrastável na barra superior
+                // Cria a legenda arrastável na barra superior (AGORA COM BOTÃO DE EXCLUIR)
                 const legendaItem = document.createElement('div');
                 legendaItem.className = 'item-legenda-mapa';
                 legendaItem.draggable = true;
@@ -1445,6 +1533,7 @@
                 legendaItem.innerHTML = `
                     <div class="pin-barra">${numero}</div>
                     <span style="font-size: 0.9rem; font-weight: 500;">${rota.clienteData.estabelecimento} ${!rota.found ? '(S/ Pino)' : ''}</span>
+                    <i class="fas fa-times btn-remover-legenda" title="Remover da Rota" onclick="removerClienteMapa(${index}, event)"></i>
                 `;
                 barraMarcadores.appendChild(legendaItem);
             });
@@ -1511,6 +1600,35 @@
             renderizarMapaELegenda(); // Redesenha a tela com a numeração e mapa corrigidos!
         }
 
+        // NOVA FUNÇÃO: Remover cliente da rota pelo mapa
+        function removerClienteMapa(index, event) {
+            if(event) event.stopPropagation(); // Evita que o click interfira com o arrastar
+            
+            const clienteRemovido = rotasMapeadas[index].clienteData;
+            
+            // Remove do array do mapa
+            rotasMapeadas.splice(index, 1);
+            
+            // Desmarca o checkbox correspondente na tabela de trás
+            const checkboxes = document.querySelectorAll('.checkbox-cliente-rota');
+            checkboxes.forEach(cb => {
+                const cbData = JSON.parse(cb.value);
+                if (cbData.cnpj === clienteRemovido.cnpj && cbData.estabelecimento === clienteRemovido.estabelecimento) {
+                    cb.checked = false;
+                }
+            });
+
+            // Re-renderiza o mapa e atualiza bounds
+            if (rotasMapeadas.length === 0) {
+                fecharModalMapa();
+            } else {
+                renderizarMapaELegenda();
+                if (mapMarkersGroup.getLayers().length > 0) {
+                    mapInstance.fitBounds(mapMarkersGroup.getBounds(), { padding: [50, 50] });
+                }
+            }
+        }
+
         function fecharModalMapa() {
             document.getElementById('modal-mapa').style.display = 'none';
         }
@@ -1528,16 +1646,13 @@
 
             let clientesParaSalvar = [];
             
-            // SE o usuário abriu o mapa e a array rotasMapeadas tem o mesmo tamanho de itens selecionados, 
-            // significa que ele pode ter ordenado lá. Usamos a ordem do mapa!
-            if (rotasMapeadas && rotasMapeadas.length === checkboxes.length) {
+            // Ajustado: Se rotasMapeadas tiver dados, usa a ordem do mapa, senão pega a dos checkboxes
+            if (rotasMapeadas && rotasMapeadas.length > 0) {
                 clientesParaSalvar = rotasMapeadas.map(r => r.clienteData);
             } else {
-                // Caso contrário (se nem abriu o mapa), pega a ordem normal das caixinhas marcadas.
                 clientesParaSalvar = Array.from(checkboxes).map(cb => JSON.parse(cb.value));
             }
             
-            // Formata no padrão do App
             const listaParaApp = clientesParaSalvar.map(clienteData => {
                 let enderecoFormatado = clienteData.endereco || '';
                 if(clienteData.bairro) enderecoFormatado += ` - ${clienteData.bairro}`;
@@ -1563,29 +1678,185 @@
             const { data: veiculoData } = await _supabase.from('veiculos').select('motorista_atual_id').eq('placa', placaSelecionadaNovaRota).single();
             const idMotorista = veiculoData ? veiculoData.motorista_atual_id : null;
 
-            const { error } = await _supabase.from('rotas_diarias').insert([{
+            // =========================================================================
+            // INSERINDO OS DADOS DIRETAMENTE NA NOVA TABELA: 'rotas_prontas'
+            // =========================================================================
+            const { error } = await _supabase.from('rotas_prontas').insert([{
                 veiculo_placa: placaSelecionadaNovaRota,
                 motorista_id: idMotorista,
-                data_inicio: dataEscolhida,
-                status: 'em_andamento',
+                data_rota: dataEscolhida,
+                status: 'pronta',
                 lista_entregas: listaParaApp
             }]);
 
             mostrarCarregamento(false);
 
             if (error) {
-                alert("Erro ao criar a rota: " + error.message);
+                alert("Erro ao criar a rota pronta: " + error.message);
             } else {
-                alert("Rota criada e enviada com sucesso! O motorista já poderá visualizar as entregas no aplicativo.");
+                alert("Rota salva com sucesso! Ela já está disponível em 'Rotas prontas'.");
                 
                 document.getElementById('data-nova-rota').value = '';
                 document.getElementById('filtro-cliente-montar-rota').value = '';
                 document.getElementById('check-todos').checked = false;
                 placaSelecionadaNovaRota = '';
                 document.getElementById('placa-selecionada-display').style.display = 'none';
-                rotasMapeadas = []; // Limpa cache do mapa após salvar
+                rotasMapeadas = [];
                 
                 renderizarTabelaMontarRota(listaClientesLocal);
+            }
+        }
+
+        // ==========================================
+        // 7. CARREGAR ROTAS PRONTAS
+        // ==========================================
+        async function carregarRotasProntas() {
+            mostrarCarregamento(true);
+
+            const { data, error } = await _supabase
+                .from('rotas_prontas')
+                .select('*')
+                .order('data_rota', { ascending: false });
+
+            if (error) {
+                console.error("Erro ao buscar rotas prontas:", error);
+                mostrarCarregamento(false);
+                return;
+            }
+
+            const tbody = document.querySelector('#tabela-rotas-prontas tbody');
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhuma rota pronta encontrada.</td></tr>';
+                mostrarCarregamento(false);
+                return;
+            }
+
+            tbody.innerHTML = data.map(rota => {
+                const dataFormatada = formatarDataBR(rota.data_rota);
+                const qtdEntregas = rota.lista_entregas ? rota.lista_entregas.length : 0;
+                
+                return `
+                <tr>
+                    <td><b>${dataFormatada}</b></td>
+                    <td><b><span style="color: var(--text-dark);">${rota.veiculo_placa || '--'}</span></b></td>
+                    <td>${qtdEntregas} entregas</td>
+                    <td><span class="badge-sucesso">${rota.status ? rota.status.toUpperCase() : 'PRONTA'}</span></td>
+                    <td style="text-align: center;">
+                        <div style="display: flex; justify-content: center; gap: 10px; align-items: center;">
+                            <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="abrirModalDetalhesRota('${rota.id}')"><i class="fas fa-eye"></i> Detalhes</button>
+                            <i class="fas fa-times btn-icon-danger" title="Excluir Rota" onclick="confirmarExclusaoRota('${rota.id}', '${rota.veiculo_placa}')" style="cursor: pointer; font-size: 1.3rem;"></i>
+                        </div>
+                    </td>
+                </tr>
+                `;
+            }).join('');
+
+            mostrarCarregamento(false);
+        }
+
+        // ==========================================
+        // 8. LÓGICA DE EXIBIÇÃO DE DETALHES E EXCLUSÃO DE ROTA PRONTA
+        // ==========================================
+        async function abrirModalDetalhesRota(idRota) {
+            mostrarCarregamento(true);
+            
+            // Busca os detalhes da rota específica no banco
+            const { data, error } = await _supabase
+                .from('rotas_prontas')
+                .select('*')
+                .eq('id', idRota)
+                .single();
+
+            mostrarCarregamento(false);
+
+            if (error) {
+                alert("Erro ao buscar detalhes da rota: " + error.message);
+                return;
+            }
+
+            const containerConteudo = document.getElementById('conteudo-detalhes-rota');
+            const dataFormatada = formatarDataBR(data.data_rota);
+            const qtdEntregas = data.lista_entregas ? data.lista_entregas.length : 0;
+            
+            // Monta o cabeçalho de informações da rota
+            let htmlConteudo = `
+                <div class="detalhes-info-row">
+                    <span class="detalhes-info-label">Data da Rota:</span>
+                    <span class="detalhes-info-value">${dataFormatada}</span>
+                </div>
+                <div class="detalhes-info-row">
+                    <span class="detalhes-info-label">Veículo (Placa):</span>
+                    <span class="detalhes-info-value">${data.veiculo_placa || 'Não informada'}</span>
+                </div>
+                <div class="detalhes-info-row">
+                    <span class="detalhes-info-label">Status Atual:</span>
+                    <span class="detalhes-info-value" style="color: var(--success-green); font-weight: bold;">${data.status ? data.status.toUpperCase() : 'PRONTA'}</span>
+                </div>
+                <div class="detalhes-info-row" style="border-bottom: none;">
+                    <span class="detalhes-info-label">Total de Entregas:</span>
+                    <span class="detalhes-info-value">${qtdEntregas}</span>
+                </div>
+                
+                <h4 style="margin-bottom: 10px; color: var(--primary-blue);">Lista de Clientes (Ordem de Entrega)</h4>
+                <ul class="lista-entregas-detalhe">
+            `;
+
+            // Adiciona a lista de clientes se existir
+            if (qtdEntregas > 0) {
+                data.lista_entregas.forEach((entrega, index) => {
+                    htmlConteudo += `
+                        <li>
+                            <span class="entrega-estabelecimento">${index + 1}. ${entrega.estabelecimento}</span>
+                            <span class="entrega-endereco"><i class="fas fa-map-marker-alt" style="color: #bbb;"></i> ${entrega.endereco}</span>
+                            <span class="entrega-cnpj">CNPJ: ${entrega.cnpj || 'Não informado'}</span>
+                        </li>
+                    `;
+                });
+            } else {
+                htmlConteudo += `<li style="text-align: center; color: #888;">Nenhum cliente associado a esta rota.</li>`;
+            }
+
+            htmlConteudo += `</ul>`;
+            
+            // Injeta o HTML no modal e exibe
+            containerConteudo.innerHTML = htmlConteudo;
+            document.getElementById('modal-detalhes-rota').style.display = 'flex';
+        }
+
+        function fecharModalDetalhesRota() {
+            document.getElementById('modal-detalhes-rota').style.display = 'none';
+        }
+
+        let rotaIdParaExcluir = null;
+
+        function confirmarExclusaoRota(idRota, placaRota) {
+            rotaIdParaExcluir = idRota;
+            document.getElementById('texto-exclusao-rota').innerHTML = `Deseja realmente EXCLUIR a rota do veículo <b>${placaRota || 'Sem Placa'}</b>? Esta ação não pode ser desfeita.`;
+            document.getElementById('modal-excluir-rota').style.display = 'flex';
+        }
+
+        function fecharModalExcluirRota() {
+            document.getElementById('modal-excluir-rota').style.display = 'none';
+            rotaIdParaExcluir = null;
+        }
+
+        async function executarExclusaoRota() {
+            if (!rotaIdParaExcluir) return;
+            
+            mostrarCarregamento(true);
+            
+            const { error } = await _supabase
+                .from('rotas_prontas')
+                .delete()
+                .eq('id', rotaIdParaExcluir);
+                
+            if (error) {
+                alert("Erro ao excluir a rota: " + error.message);
+                mostrarCarregamento(false);
+            } else {
+                fecharModalExcluirRota();
+                carregarRotasProntas(); 
             }
         }
 
@@ -1608,6 +1879,11 @@
             // Ao abrir a tela de clientes ou a tela de montar rota, precisamos garantir que a base de clientes está baixada
             if(id === 'clientes' || id === 'montar-rota') {
                 carregarClientes();
+            }
+
+            // Ao abrir a aba de rotas prontas, carrega as informações do banco
+            if(id === 'rotas-prontas') {
+                carregarRotasProntas();
             }
             
             if(id === 'dashboard') carregarRotas(); 
