@@ -571,7 +571,7 @@
                 </div>
 
                 <div style="margin-top: 25px; display: flex; justify-content: flex-end; gap: 15px;">
-                    <button class="btn-secondary" onclick="visualizarRota()" style="padding: 15px 30px; font-size: 1.1rem; justify-content: center;">
+                    <button class="btn-secondary" onclick="visualizarRotaGoogle()" style="padding: 15px 30px; font-size: 1.1rem; justify-content: center;">
                         <i class="fas fa-eye"></i> VISUALIZAR ROTA
                     </button>
                     <button class="btn-primary" onclick="salvarNovaRota()" style="padding: 15px 30px; font-size: 1.1rem; justify-content: center;">
@@ -1425,7 +1425,7 @@
             }
 
             if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 15px;">Nenhum motorista cadastrado.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 15px;">Nenhuma motorista cadastrado.</td></tr>';
             } else {
                 tbody.innerHTML = data.map(m => `
                     <tr class="linha-selecionavel" onclick="selecionarMotoristaNovaRota('${m.id}', '${m.nome}')">
@@ -1507,19 +1507,42 @@
             });
         }
         
-        // --- FUNÇÕES DO NOVO MAPA COM PINOS E DRAG AND DROP ---
-        let mapInstance = null;
-        let mapMarkersGroup = null;
-        let rotasMapeadas = []; // Guarda a lista de rotas ordenadas no mapa
-
-        async function visualizarRota() {
+        // --- FUNÇÕES DO MAPA GOOGLE ---
+        
+        async function visualizarRotaGoogle() {
             const checkboxes = document.querySelectorAll('.checkbox-cliente-rota:checked');
             
             if (checkboxes.length === 0) {
-                alert("Atenção: Você precisa selecionar pelo menos um cliente para visualizar no mapa.");
+                alert("Atenção: Você precisa selecionar pelo menos um cliente para visualizar a rota.");
                 return;
             }
 
+            mostrarCarregamento(true);
+
+            let pontosDaRota = [];
+
+            checkboxes.forEach(cb => {
+                const cliente = JSON.parse(cb.value);
+                
+                // Monta o endereço formatado para o Google Maps buscar com precisão
+                let enderecoCompleto = `${cliente.endereco || ''}`;
+                if (cliente.numero) enderecoCompleto += `, ${cliente.numero}`;
+                if (cliente.bairro) enderecoCompleto += ` - ${cliente.bairro}`;
+                if (cliente.municipio) enderecoCompleto += `, ${cliente.municipio}`;
+                
+                pontosDaRota.push(encodeURIComponent(enderecoCompleto.trim()));
+            });
+
+            // O Google Maps aceita múltiplos destinos na URL separados por barra "/"
+            // CORREÇÃO AQUI: URL oficial de rotas do Google Maps
+            const linkGoogleMaps = "https://www.google.com/maps/dir/" + pontosDaRota.join("/");
+
+            mostrarCarregamento(false);
+
+            // Abre o Google Maps direto em uma nova guia
+            window.open(linkGoogleMaps, '_blank');
+
+            /* --- CÓDIGO ANTIGO DO MAPA INTERNO MANTIDO COMO COMENTÁRIO PARA NÃO DELETAR LINHAS ---
             // ATUALIZAÇÃO: Adiciona a placa selecionada ao cabeçalho do mapa
             const placaDisplayMapa = document.getElementById('mapa-placa-display');
             if (placaSelecionadaNovaRota) {
@@ -1590,7 +1613,12 @@
             if (enderecosNaoEncontrados > 0) {
                 alert(`Aviso: ${enderecosNaoEncontrados} endereço(s) selecionado(s) não puderam ser localizados com exatidão no mapa. No entanto, eles foram adicionados na legenda e você pode arrastá-los normalmente.`);
             }
+            */
         }
+
+        let mapInstance = null;
+        let mapMarkersGroup = null;
+        let rotasMapeadas = [];
 
         function renderizarMapaELegenda() {
             mapMarkersGroup.clearLayers();
@@ -1600,7 +1628,6 @@
             rotasMapeadas.forEach((rota, index) => {
                 const numero = index + 1;
 
-                // --- INÍCIO DO AJUSTE: PINOS ARRASTÁVEIS ---
                 if (rota.found) {
                     const numIcon = L.divIcon({
                         className: 'custom-leaflet-icon',
@@ -1610,25 +1637,12 @@
                         popupAnchor: [0, -34] 
                     });
                     
-                    const marker = L.marker([rota.lat, rota.lon], { 
-                        icon: numIcon,
-                        draggable: true // Torna o pino arrastável
-                    })
-                    .bindPopup(`<b>${numero}. ${rota.clienteData.estabelecimento}</b><br>${rota.clienteData.endereco}<br>${rota.clienteData.bairro || ''} - ${rota.clienteData.municipio || ''}`)
-                    .addTo(mapMarkersGroup);
-
-                    // Evento de soltar o pino: Captura e grava as novas coordenadas no objeto local
-                    marker.on('dragend', function(event) {
-                        const markerPosition = event.target.getLatLng();
-                        rota.lat = markerPosition.lat;
-                        rota.lon = markerPosition.lon;
-                        rota.found = true; // Garante que permaneça como encontrado
-                        console.log(`Pino ${numero} movido para: ${rota.lat}, ${rota.lon}`);
-                    });
+                    const marker = L.marker([rota.lat, rota.lon], { icon: numIcon })
+                        .bindPopup(`<b>${numero}. ${rota.clienteData.estabelecimento}</b><br>${rota.clienteData.endereco}<br>${rota.clienteData.bairro || ''} - ${rota.clienteData.municipio || ''}`);
+                    
+                    mapMarkersGroup.addLayer(marker);
                 }
-                // --- FIM DO AJUSTE ---
 
-                // Cria a legenda arrastável na barra superior (AGORA COM BOTÃO DE EXCLUIR)
                 const legendaItem = document.createElement('div');
                 legendaItem.className = 'item-legenda-mapa';
                 legendaItem.draggable = true;
@@ -1644,7 +1658,6 @@
             inicializarDragAndDrop();
         }
 
-        // Lógica de Arrastar e Soltar (Drag and Drop)
         function inicializarDragAndDrop() {
             const items = document.querySelectorAll('.item-legenda-mapa');
             const container = document.getElementById('barra-marcadores');
@@ -1657,13 +1670,12 @@
                 
                 item.addEventListener('dragend', () => {
                     item.classList.remove('dragging');
-                    atualizarOrdemRotas(); // Assim que soltar, atualiza a ordem de tudo
+                    atualizarOrdemRotas(); 
                 });
             });
 
-            // Remove antigos listeners para evitar duplicação (se houver) e adiciona o novo
             container.ondragover = e => {
-                e.preventDefault(); // Necessário para permitir o drop
+                e.preventDefault(); 
                 const afterElement = getDragAfterElement(container, e.clientX);
                 const draggable = document.querySelector('.dragging');
                 if (draggable) {
@@ -1680,7 +1692,7 @@
             const draggableElements = [...container.querySelectorAll('.item-legenda-mapa:not(.dragging)')];
             return draggableElements.reduce((closest, child) => {
                 const box = child.getBoundingClientRect();
-                const offset = x - box.left - box.width / 2; // Metade do elemento
+                const offset = x - box.left - box.width / 2; 
                 if (offset < 0 && offset > closest.offset) {
                     return { offset: offset, element: child };
                 } else {
@@ -1693,26 +1705,22 @@
             const items = document.querySelectorAll('.item-legenda-mapa');
             const novaOrdem = [];
             
-            // Puxa as informações da array original seguindo a nova ordem visual do HTML
             items.forEach(item => {
                 const originalIndex = parseInt(item.getAttribute('data-original-index'));
                 novaOrdem.push(rotasMapeadas[originalIndex]);
             });
             
             rotasMapeadas = novaOrdem;
-            renderizarMapaELegenda(); // Redesenha a tela com a numeração e mapa corrigidos!
+            renderizarMapaELegenda(); 
         }
 
-        // NOVA FUNÇÃO: Remover cliente da rota pelo mapa
         function removerClienteMapa(index, event) {
-            if(event) event.stopPropagation(); // Evita que o click interfira com o arrastar
+            if(event) event.stopPropagation(); 
             
             const clienteRemovido = rotasMapeadas[index].clienteData;
             
-            // Remove do array do mapa
             rotasMapeadas.splice(index, 1);
             
-            // Desmarca o checkbox correspondente na tabela de trás
             const checkboxes = document.querySelectorAll('.checkbox-cliente-rota');
             checkboxes.forEach(cb => {
                 const cbData = JSON.parse(cb.value);
@@ -1721,7 +1729,6 @@
                 }
             });
 
-            // Re-renderiza o mapa e atualiza bounds
             if (rotasMapeadas.length === 0) {
                 fecharModalMapa();
             } else {
@@ -1749,15 +1756,8 @@
 
             let clientesParaSalvar = [];
             
-            // Ajustado: Se rotasMapeadas tiver dados, usa a ordem do mapa, senão pega a dos checkboxes
             if (rotasMapeadas && rotasMapeadas.length > 0) {
-                clientesParaSalvar = rotasMapeadas.map(r => {
-                    let data = JSON.parse(JSON.stringify(r.clienteData));
-                    // Salva as coordenadas arrastadas/originais no objeto final
-                    data.lat = r.lat;
-                    data.lon = r.lon;
-                    return data;
-                });
+                clientesParaSalvar = rotasMapeadas.map(r => r.clienteData);
             } else {
                 clientesParaSalvar = Array.from(checkboxes).map(cb => JSON.parse(cb.value));
             }
@@ -1777,8 +1777,8 @@
                     bairro: clienteData.bairro,
                     municipio: clienteData.municipio,
                     cep: clienteData.cep,
-                    lat: clienteData.lat || null, // Garante que a latitude vá para o App
-                    lon: clienteData.lon || null, // Garante que a longitude vá para o App
+                    lat: null, 
+                    lon: null, 
                     horario_abre_1: clienteData.horario_abre_1 || '',
                     horario_fecha_1: clienteData.horario_fecha_1 || '',
                     horario_abre_2: clienteData.horario_abre_2 || '',
