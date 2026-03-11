@@ -158,7 +158,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            cursor: grab;
         }
+        .pin-mapa:active { cursor: grabbing; }
         .pin-mapa span {
             transform: rotate(45deg);
             font-weight: bold;
@@ -499,6 +501,7 @@
                             <th>NOME DO ESTABELECIMENTO</th>
                             <th>CNPJ</th>
                             <th>RUA / NÚMERO</th>
+                            <th>N°</th>
                             <th>BAIRRO</th>
                             <th>MUNICÍPIO</th>
                             <th>CEP</th>
@@ -507,7 +510,7 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td colspan="7" style="text-align: center;">Nenhum cliente carregado.</td>
+                            <td colspan="8" style="text-align: center;">Nenhum cliente carregado.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -521,7 +524,11 @@
                     <button class="btn-primary" onclick="abrirModalPlacas()" style="width: fit-content; margin: 0;">
                         <i class="fas fa-id-card"></i> Placas
                     </button>
+                    <button class="btn-primary" onclick="abrirModalListaMotoristas()" style="width: fit-content; margin: 0;">
+                        <i class="fas fa-user-tie"></i> Motoristas
+                    </button>
                     <span id="placa-selecionada-display" style="display: none; font-weight: bold; color: var(--accent-blue); background: #E6F0FF; padding: 10px 15px; border-radius: 8px; border: 1px dashed var(--accent-blue);"></span>
+                    <span id="motorista-selecionado-display" style="display: none; font-weight: bold; color: var(--accent-blue); background: #E6F0FF; padding: 10px 15px; border-radius: 8px; border: 1px dashed var(--accent-blue);"></span>
                 </div>
             </div>
 
@@ -549,6 +556,7 @@
                                 <th>CLIENTE</th>
                                 <th>CNPJ</th>
                                 <th>RUA / NÚMERO</th>
+                                <th>N°</th>
                                 <th>BAIRRO</th>
                                 <th>MUNICÍPIO</th>
                                 <th>CEP</th>
@@ -556,7 +564,7 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td colspan="7" style="text-align: center; padding: 20px;">Carregando lista de clientes...</td>
+                                <td colspan="8" style="text-align: center; padding: 20px;">Carregando lista de clientes...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -705,9 +713,15 @@
                     <input type="text" id="cli-cnpj-edit" required disabled style="background-color: #EEE; cursor: not-allowed;" title="O CNPJ não pode ser alterado">
                 </div>
 
-                <div class="form-group">
-                    <label>Endereço Principal (Rua / Número)</label>
-                    <input type="text" id="cli-endereco-edit">
+                <div class="row">
+                    <div class="form-group col" style="flex: 2;">
+                        <label>Endereço Principal (Rua / Avenida)</label>
+                        <input type="text" id="cli-endereco-edit">
+                    </div>
+                    <div class="form-group col" style="flex: 0.5;">
+                        <label>N°</label>
+                        <input type="text" id="cli-numero-edit">
+                    </div>
                 </div>
 
                 <div class="row">
@@ -764,6 +778,30 @@
                 <tbody>
                     <tr>
                         <td colspan="2" style="text-align: center; padding: 15px;">Carregando placas...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal-lista-motoristas" class="modal-overlay">
+        <div class="modal-placas-container">
+            <div class="modal-header">
+                <h3>Motoristas Cadastrados</h3>
+                <i class="fas fa-times btn-close" onclick="fecharModalListaMotoristas()"></i>
+            </div>
+            
+            <table id="tabela-modal-lista-motoristas" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="padding: 10px; border-bottom: 1px solid #ddd;">NOME</th>
+                        <th style="padding: 10px; border-bottom: 1px solid #ddd;">DOCUMENTO</th>
+                        <th style="padding: 10px; border-bottom: 1px solid #ddd;">STATUS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="3" style="text-align: center; padding: 15px;">Carregando motoristas...</td>
                     </tr>
                 </tbody>
             </table>
@@ -1108,9 +1146,9 @@
         function confirmarExclusao(id, nome) {
             motoristaIdParaExcluir = id;
             document.getElementById('texto-exclusao').innerHTML = `Deseja realmente EXCLUIR o motorista <b>${nome}</b>? Esta ação é irreversível.`;
-            document.getElementById('modal-exclusao').style.display = 'flex';
+            document.getElementById('modal-excluir-rota').style.display = 'flex';
         }
-        function fecharModalExclusao() { document.getElementById('modal-exclusao').style.display = 'none'; motoristaIdParaExcluir = null; }
+        function fecharModalExclusao() { document.getElementById('modal-excluir-rota').style.display = 'none'; motoristaIdParaExcluir = null; }
 
         async function executarExclusao() {
             if(!motoristaIdParaExcluir) return;
@@ -1148,7 +1186,7 @@
             
             const { data, error } = await _supabase
                 .from('entregas')
-                .select('id, estabelecimento, cnpj, endereco, bairro, municipio, cep, horario_abre_1, horario_fecha_1, horario_abre_2, horario_fecha_2')
+                .select('id, estabelecimento, cnpj, endereco, numero, bairro, municipio, cep, horario_abre_1, horario_fecha_1, horario_abre_2, horario_fecha_2')
                 .order('estabelecimento', { ascending: true });
 
             if (error) {
@@ -1172,12 +1210,11 @@
             const tbody = document.querySelector('#tabela-clientes tbody');
             
             if (dados.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nenhum cliente encontrado.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Nenhum cliente encontrado.</td></tr>';
                 return;
             }
 
             tbody.innerHTML = dados.map(cliente => {
-                // Transformando o objeto cliente em string para passar na função do clique (escapando aspas)
                 const cliEdit = JSON.stringify(cliente).replace(/"/g, '&quot;');
 
                 return `
@@ -1185,6 +1222,7 @@
                     <td><b>${cliente.estabelecimento || '--'}</b></td>
                     <td>${cliente.cnpj || '--'}</td>
                     <td>${cliente.endereco || '--'}</td>
+                    <td><b>${cliente.numero || '--'}</b></td>
                     <td>${cliente.bairro || '--'}</td>
                     <td>${cliente.municipio || '--'}</td>
                     <td>${cliente.cep || '--'}</td>
@@ -1237,6 +1275,7 @@
             document.getElementById('cli-nome-edit').value = cliente.estabelecimento || '';
             document.getElementById('cli-cnpj-edit').value = aplicarMascaraCNPJParaInput(cliente.cnpj || '');
             document.getElementById('cli-endereco-edit').value = cliente.endereco || '';
+            document.getElementById('cli-numero-edit').value = cliente.numero || '';
             document.getElementById('cli-bairro-edit').value = cliente.bairro || '';
             document.getElementById('cli-municipio-edit').value = cliente.municipio || '';
             document.getElementById('cli-cep-edit').value = aplicarMascaraCEPParaInput(cliente.cep || '');
@@ -1259,6 +1298,7 @@
             const id = document.getElementById('cli-id-edit').value;
             const nome = document.getElementById('cli-nome-edit').value;
             const endereco = document.getElementById('cli-endereco-edit').value;
+            const numero = document.getElementById('cli-numero-edit').value;
             const bairro = document.getElementById('cli-bairro-edit').value;
             const municipio = document.getElementById('cli-municipio-edit').value;
             const cep = document.getElementById('cli-cep-edit').value;
@@ -1268,6 +1308,7 @@
                 .update({
                     estabelecimento: nome,
                     endereco: endereco,
+                    numero: numero,
                     bairro: bairro,
                     municipio: municipio,
                     cep: cep
@@ -1321,6 +1362,8 @@
         // 5. MODAL DE PLACAS NA SEÇÃO MONTAR ROTA
         // ==========================================
         let placaSelecionadaNovaRota = ''; 
+        let motoristaSelecionadoNovaRotaId = null;
+        let motoristaSelecionadoNovaRotaNome = '';
 
         async function abrirModalPlacas() {
             document.getElementById('modal-placas').style.display = 'flex';
@@ -1363,6 +1406,53 @@
         }
 
         // ==========================================
+        // MODAL DE MOTORISTAS NA SEÇÃO MONTAR ROTA
+        // ==========================================
+        async function abrirModalListaMotoristas() {
+            document.getElementById('modal-lista-motoristas').style.display = 'flex';
+            const tbody = document.querySelector('#tabela-modal-lista-motoristas tbody');
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 15px;">Carregando...</td></tr>';
+
+            const { data, error } = await _supabase
+                .from('motoristas')
+                .select('id, nome, documento, ativo')
+                .order('nome', { ascending: true });
+
+            if (error) {
+                console.error("Erro ao buscar motoristas:", error);
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 15px; color: red;">Erro ao carregar.</td></tr>';
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 15px;">Nenhum motorista cadastrado.</td></tr>';
+            } else {
+                tbody.innerHTML = data.map(m => `
+                    <tr class="linha-selecionavel" onclick="selecionarMotoristaNovaRota('${m.id}', '${m.nome}')">
+                        <td style="padding: 10px; border-bottom: 1px solid #eee;"><b>${m.nome}</b></td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee;">${m.documento || '--'}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee;" class="${m.ativo ? 'status-livre' : 'status-desligado'}">
+                            ${m.ativo ? 'ATIVO' : 'DESLIGADO'}
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function fecharModalListaMotoristas() {
+            document.getElementById('modal-lista-motoristas').style.display = 'none';
+        }
+
+        function selecionarMotoristaNovaRota(id, nome) {
+            motoristaSelecionadoNovaRotaId = id;
+            motoristaSelecionadoNovaRotaNome = nome;
+            const display = document.getElementById('motorista-selecionado-display');
+            display.innerHTML = `<i class="fas fa-user-tie"></i> Motorista: ${nome}`;
+            display.style.display = 'block'; 
+            fecharModalListaMotoristas();
+        }
+
+        // ==========================================
         // 6. LÓGICA DE SELEÇÃO E CRIAÇÃO DE NOVA ROTA
         // ==========================================
         
@@ -1370,7 +1460,7 @@
             const tbody = document.querySelector('#tabela-clientes-montar-rota tbody');
             
             if (dados.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Nenhum cliente disponível.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Nenhum cliente disponível.</td></tr>';
                 return;
             }
 
@@ -1385,6 +1475,7 @@
                     <td><b>${cliente.estabelecimento || '--'}</b></td>
                     <td>${cliente.cnpj || '--'}</td>
                     <td>${cliente.endereco || '--'}</td>
+                    <td><b>${cliente.numero || '--'}</b></td>
                     <td>${cliente.bairro || '--'}</td>
                     <td>${cliente.municipio || '--'}</td>
                     <td>${cliente.cep || '--'}</td>
@@ -1509,7 +1600,7 @@
             rotasMapeadas.forEach((rota, index) => {
                 const numero = index + 1;
 
-                // Desenha o pino no mapa (se o endereço foi encontrado)
+                // --- INÍCIO DO AJUSTE: PINOS ARRASTÁVEIS ---
                 if (rota.found) {
                     const numIcon = L.divIcon({
                         className: 'custom-leaflet-icon',
@@ -1519,11 +1610,23 @@
                         popupAnchor: [0, -34] 
                     });
                     
-                    const marker = L.marker([rota.lat, rota.lon], { icon: numIcon })
-                        .bindPopup(`<b>${numero}. ${rota.clienteData.estabelecimento}</b><br>${rota.clienteData.endereco}<br>${rota.clienteData.bairro || ''} - ${rota.clienteData.municipio || ''}`);
-                    
-                    mapMarkersGroup.addLayer(marker);
+                    const marker = L.marker([rota.lat, rota.lon], { 
+                        icon: numIcon,
+                        draggable: true // Torna o pino arrastável
+                    })
+                    .bindPopup(`<b>${numero}. ${rota.clienteData.estabelecimento}</b><br>${rota.clienteData.endereco}<br>${rota.clienteData.bairro || ''} - ${rota.clienteData.municipio || ''}`)
+                    .addTo(mapMarkersGroup);
+
+                    // Evento de soltar o pino: Captura e grava as novas coordenadas no objeto local
+                    marker.on('dragend', function(event) {
+                        const markerPosition = event.target.getLatLng();
+                        rota.lat = markerPosition.lat;
+                        rota.lon = markerPosition.lon;
+                        rota.found = true; // Garante que permaneça como encontrado
+                        console.log(`Pino ${numero} movido para: ${rota.lat}, ${rota.lon}`);
+                    });
                 }
+                // --- FIM DO AJUSTE ---
 
                 // Cria a legenda arrastável na barra superior (AGORA COM BOTÃO DE EXCLUIR)
                 const legendaItem = document.createElement('div');
@@ -1648,13 +1751,20 @@
             
             // Ajustado: Se rotasMapeadas tiver dados, usa a ordem do mapa, senão pega a dos checkboxes
             if (rotasMapeadas && rotasMapeadas.length > 0) {
-                clientesParaSalvar = rotasMapeadas.map(r => r.clienteData);
+                clientesParaSalvar = rotasMapeadas.map(r => {
+                    let data = JSON.parse(JSON.stringify(r.clienteData));
+                    // Salva as coordenadas arrastadas/originais no objeto final
+                    data.lat = r.lat;
+                    data.lon = r.lon;
+                    return data;
+                });
             } else {
                 clientesParaSalvar = Array.from(checkboxes).map(cb => JSON.parse(cb.value));
             }
             
             const listaParaApp = clientesParaSalvar.map(clienteData => {
                 let enderecoFormatado = clienteData.endereco || '';
+                if(clienteData.numero) enderecoFormatado += `, ${clienteData.numero}`;
                 if(clienteData.bairro) enderecoFormatado += ` - ${clienteData.bairro}`;
                 if(clienteData.municipio) enderecoFormatado += ` / ${clienteData.municipio}`;
                 if(clienteData.cep) enderecoFormatado += ` - CEP: ${clienteData.cep}`;
@@ -1663,9 +1773,12 @@
                     estabelecimento: clienteData.estabelecimento,
                     cnpj: clienteData.cnpj,
                     endereco: enderecoFormatado,
+                    numero: clienteData.numero,
                     bairro: clienteData.bairro,
                     municipio: clienteData.municipio,
                     cep: clienteData.cep,
+                    lat: clienteData.lat || null, // Garante que a latitude vá para o App
+                    lon: clienteData.lon || null, // Garante que a longitude vá para o App
                     horario_abre_1: clienteData.horario_abre_1 || '',
                     horario_fecha_1: clienteData.horario_fecha_1 || '',
                     horario_abre_2: clienteData.horario_abre_2 || '',
@@ -1675,15 +1788,16 @@
                 };
             });
             
-            const { data: veiculoData } = await _supabase.from('veiculos').select('motorista_atual_id').eq('placa', placaSelecionadaNovaRota).single();
-            const idMotorista = veiculoData ? veiculoData.motorista_atual_id : null;
+            let idMotorista = motoristaSelecionadoNovaRotaId;
+            if (!idMotorista) {
+                const { data: veiculoData } = await _supabase.from('veiculos').select('motorista_atual_id').eq('placa', placaSelecionadaNovaRota).single();
+                idMotorista = veiculoData ? veiculoData.motorista_atual_id : null;
+            }
 
-            // =========================================================================
-            // INSERINDO OS DADOS DIRETAMENTE NA NOVA TABELA: 'rotas_prontas'
-            // =========================================================================
             const { error } = await _supabase.from('rotas_prontas').insert([{
                 veiculo_placa: placaSelecionadaNovaRota,
                 motorista_id: idMotorista,
+                motorista_nome: motoristaSelecionadoNovaRotaNome,
                 data_rota: dataEscolhida,
                 status: 'pronta',
                 lista_entregas: listaParaApp
@@ -1701,6 +1815,9 @@
                 document.getElementById('check-todos').checked = false;
                 placaSelecionadaNovaRota = '';
                 document.getElementById('placa-selecionada-display').style.display = 'none';
+                motoristaSelecionadoNovaRotaId = null;
+                motoristaSelecionadoNovaRotaNome = '';
+                document.getElementById('motorista-selecionado-display').style.display = 'none';
                 rotasMapeadas = [];
                 
                 renderizarTabelaMontarRota(listaClientesLocal);
@@ -1761,7 +1878,6 @@
         async function abrirModalDetalhesRota(idRota) {
             mostrarCarregamento(true);
             
-            // Busca os detalhes da rota específica no banco
             const { data, error } = await _supabase
                 .from('rotas_prontas')
                 .select('*')
@@ -1779,7 +1895,6 @@
             const dataFormatada = formatarDataBR(data.data_rota);
             const qtdEntregas = data.lista_entregas ? data.lista_entregas.length : 0;
             
-            // Monta o cabeçalho de informações da rota
             let htmlConteudo = `
                 <div class="detalhes-info-row">
                     <span class="detalhes-info-label">Data da Rota:</span>
@@ -1788,6 +1903,10 @@
                 <div class="detalhes-info-row">
                     <span class="detalhes-info-label">Veículo (Placa):</span>
                     <span class="detalhes-info-value">${data.veiculo_placa || 'Não informada'}</span>
+                </div>
+                <div class="detalhes-info-row">
+                    <span class="detalhes-info-label">Motorista:</span>
+                    <span class="detalhes-info-value">${data.motorista_nome || 'Não informado'}</span>
                 </div>
                 <div class="detalhes-info-row">
                     <span class="detalhes-info-label">Status Atual:</span>
@@ -1802,7 +1921,6 @@
                 <ul class="lista-entregas-detalhe">
             `;
 
-            // Adiciona a lista de clientes se existir
             if (qtdEntregas > 0) {
                 data.lista_entregas.forEach((entrega, index) => {
                     htmlConteudo += `
@@ -1819,7 +1937,6 @@
 
             htmlConteudo += `</ul>`;
             
-            // Injeta o HTML no modal e exibe
             containerConteudo.innerHTML = htmlConteudo;
             document.getElementById('modal-detalhes-rota').style.display = 'flex';
         }
@@ -1876,12 +1993,10 @@
             if(id === 'rotas') carregarRotas();
             if(id === 'frota') carregarFrota();
             
-            // Ao abrir a tela de clientes ou a tela de montar rota, precisamos garantir que a base de clientes está baixada
             if(id === 'clientes' || id === 'montar-rota') {
                 carregarClientes();
             }
 
-            // Ao abrir a aba de rotas prontas, carrega as informações do banco
             if(id === 'rotas-prontas') {
                 carregarRotasProntas();
             }
@@ -1923,17 +2038,14 @@
                 e.target.value = valor;
             });
 
-            // Adiciona a máscara de CNPJ no campo de busca ao vivo
             document.getElementById('filtro-cliente-cnpj').addEventListener('input', function(e) {
                  e.target.value = aplicarMascaraCNPJParaInput(e.target.value);
             });
             
-            // Adiciona a máscara de CEP no modal de edição
             document.getElementById('cli-cep-edit').addEventListener('input', function(e) {
                  e.target.value = aplicarMascaraCEPParaInput(e.target.value);
             });
             
-            // --- FIM DAS MÁSCARAS ---
         });
     </script>
 </body>
