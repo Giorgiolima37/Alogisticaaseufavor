@@ -318,6 +318,29 @@
 </head>
 <body>
 
+    <div id="tela-login" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-gray); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+        <div class="card" style="width: 400px; max-width: 90%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <div style="background: var(--primary-blue); padding: 20px; border-radius: 10px; margin-bottom: 25px;">
+                <h2 style="color: white; margin: 0; font-size: 1.5rem;">Gestão da Empresa</h2>
+                <p style="color: #aab6ff; margin: 5px 0 0 0; font-size: 0.9rem;">Acesso Administrativo</p>
+            </div>
+            
+            <div class="form-group" style="text-align: left;">
+                <label>Usuário</label>
+                <input type="text" id="login-usuario" placeholder="Digite seu usuário">
+            </div>
+            
+            <div class="form-group" style="text-align: left;">
+                <label>Senha</label>
+                <input type="password" id="login-senha" placeholder="Digite sua senha">
+            </div>
+            
+            <button class="btn-primary" onclick="efetuarLogin()" style="width: 100%; justify-content: center; margin-top: 20px; padding: 15px; font-size: 1.1rem;">
+                <i class="fas fa-sign-in-alt"></i> ENTRAR NO SISTEMA
+            </button>
+        </div>
+    </div>
+
     <div class="sidebar">
         <h2>Gestão da Empresa</h2>
         <p>Configurações administrativas e segurança.</p>
@@ -819,6 +842,60 @@
         </div>
     </div>
 
+    <div id="modal-editar-cliente" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Editar Cliente</h3>
+                <i class="fas fa-times btn-close" onclick="fecharModalEditarCliente()"></i>
+            </div>
+            <form id="form-editar-cliente" onsubmit="salvarEdicaoCliente(event)">
+                <input type="hidden" id="cli-id-edit">
+                
+                <div class="form-group">
+                    <label>Nome do Estabelecimento</label>
+                    <input type="text" id="cli-nome-edit" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>CNPJ</label>
+                    <input type="text" id="cli-cnpj-edit">
+                </div>
+
+                <div class="row">
+                    <div class="form-group col" style="flex: 2;">
+                        <label>Endereço</label>
+                        <input type="text" id="cli-endereco-edit" required>
+                    </div>
+                    <div class="form-group col" style="flex: 0.8;">
+                        <label>Número</label>
+                        <input type="text" id="cli-numero-edit">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group col">
+                        <label>Bairro</label>
+                        <input type="text" id="cli-bairro-edit" required>
+                    </div>
+                    <div class="form-group col">
+                        <label>Município</label>
+                        <input type="text" id="cli-municipio-edit" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>CEP</label>
+                    <input type="text" id="cli-cep-edit">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="fecharModalEditarCliente()">Cancelar</button>
+                    <button type="submit" class="btn-primary" id="btn-salvar-cli" style="justify-content: center;">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // CONFIGURAÇÕES SUPABASE
         const SUPABASE_URL = 'https://heupqmwxkpsezzfnqbsb.supabase.co';
@@ -852,6 +929,21 @@
             if (status.includes('Fechado')) return `<span class="badge-fechado">${status}</span>`;
             if (status.includes('Recusou')) return `<span class="badge-recusa">${status}</span>`;
             return status;
+        }
+
+        // ==========================================
+        // SISTEMA DE LOGIN
+        // ==========================================
+        function efetuarLogin() {
+            const usuario = document.getElementById('login-usuario').value;
+            const senha = document.getElementById('login-senha').value;
+            
+            // Definindo usuário e senha padrão (Admin / 1234)
+            if (usuario.trim().toLowerCase() === 'admin' && senha === SENHA_ADMIN) {
+                document.getElementById('tela-login').style.display = 'none';
+            } else {
+                alert('Usuário ou senha incorretos!');
+            }
         }
 
         // ==========================================
@@ -1332,7 +1424,7 @@
             }
 
             tbody.innerHTML = dados.map(cliente => {
-                const cliEdit = JSON.stringify(cliente).replace(/"/g, '"');
+                const cliEdit = JSON.stringify(cliente).replace(/"/g, '&quot;');
 
                 return `
                 <tr>
@@ -1623,39 +1715,6 @@
             document.getElementById('check-todos').checked = false;
         }
 
-        function renderizarTabelaMontarRota(dados) {
-            const tbody = document.querySelector('#tabela-clientes-montar-rota tbody');
-            
-            if (dados.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Nenhum cliente disponível.</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = dados.map(cliente => {
-                const cliValue = JSON.stringify(cliente).replace(/"/g, '&quot;');
-                
-                // ADICIONADO: Verifica na memória se o cliente já está marcado
-                const isChecked = clientesSelecionadosMap.has(cliente.cnpj) ? 'checked' : '';
-
-                return `
-                <tr>
-                    <td style="text-align: center;">
-                        <input type="checkbox" class="checkbox-custom checkbox-cliente-rota" value="${cliValue}" onchange="toggleClienteRota(this)" ${isChecked}>
-                    </td>
-                    <td><b>${cliente.estabelecimento || '--'}</b></td>
-                    <td>${cliente.cnpj || '--'}</td>
-                    <td>${cliente.endereco || '--'}</td>
-                    <td><b>${cliente.numero || '--'}</b></td>
-                    <td>${cliente.bairro || '--'}</td>
-                    <td>${cliente.municipio || '--'}</td>
-                    <td>${cliente.cep || '--'}</td>
-                </tr>
-                `;
-            }).join('');
-            
-            document.getElementById('check-todos').checked = false;
-        }
-        
         function filtrarClientesMontarRota() {
             const termo = document.getElementById('filtro-cliente-montar-rota').value.toLowerCase();
             
@@ -1718,529 +1777,473 @@
 
             // Abre o Google Maps direto em uma nova guia
             window.open(linkGoogleMaps, '_blank');
+        }
 
-            /* --- CÓDIGO ANTIGO DO MAPA INTERNO MANTIDO COMO COMENTÁRIO PARA NÃO DELETAR LINHAS ---
-            // ATUALIZAÇÃO: Adiciona a placa selecionada ao cabeçalho do mapa
-            const placaDisplayMapa = document.getElementById('mapa-placa-display');
-            if (placaSelecionadaNovaRota) {
-                placaDisplayMapa.innerHTML = `<i class="fas fa-truck"></i> Veículo: ${placaSelecionadaNovaRota}`;
-                placaDisplayMapa.style.display = 'block';
-            } else {
-                placaDisplayMapa.style.display = 'none';
-            }
+        let mapInstance = null;
+        let mapMarkersGroup = null;
+        let rotasMapeadas = [];
 
-            document.getElementById('modal-mapa').style.display = 'flex';
-            rotasMapeadas = []; // Reseta a ordem
+        function renderizarMapaELegenda() {
+            if (!mapMarkersGroup) return; // Segurança caso o grupo não exista
+            mapMarkersGroup.clearLayers();
+            const barraMarcadores = document.getElementById('barra-marcadores');
+            barraMarcadores.innerHTML = '';
 
-            if (!mapInstance) {
-                mapInstance = L.map('map').setView([-27.5969, -48.5495], 10);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: '© OpenStreetMap'
-                }).addTo(mapInstance);
-                mapMarkersGroup = L.featureGroup().addTo(mapInstance);
-            } else {
-                setTimeout(() => { mapInstance.invalidateSize(); }, 100);
-            }
+            rotasMapeadas.forEach((rota, index) => {
+                const numero = index + 1;
 
-            mostrarCarregamento(true);
-
-            let enderecosNaoEncontrados = 0;
-
-            for (let i = 0; i < checkboxes.length; i++) {
-                const clienteData = JSON.parse(checkboxes[i].value);
-                let enderecoBusca = `${clienteData.endereco}, ${clienteData.municipio || ''}, Santa Catarina, Brasil`;
-                
-                try {
-                    if(i > 0) await new Promise(resolve => setTimeout(resolve, 1000));
-
-                    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(enderecoBusca)}&limit=1`);
-                    const data = await response.json();
-
-                    if (data && data.length > 0) {
-                        rotasMapeadas.push({
-                            lat: parseFloat(data[0].lat),
-                            lon: parseFloat(data[0].lon),
-                            clienteData: clienteData,
-                            found: true
-                        });
-                    } else {
-                        enderecosNaoEncontrados++;
-                        rotasMapeadas.push({
-      lat: null, lon: null,
-                        clienteData: clienteData,
-                        found: false
+                if (rota.found) {
+                    const numIcon = L.divIcon({
+                        className: 'custom-leaflet-icon',
+                        html: `<div class="pin-mapa"><span>${numero}</span></div>`,
+                        iconSize: [34, 34],
+                        iconAnchor: [17, 34], 
+                        popupAnchor: [0, -34] 
                     });
-                    console.warn("Endereço não encontrado para gerar pino:", enderecoBusca);
-                }
-            } catch(e) {
-                console.error("Erro na busca de geolocalização:", e);
-                enderecosNaoEncontrados++;
-                rotasMapeadas.push({ lat: null, lon: null, clienteData: clienteData, found: false });
-            }
-        }
+                        
+                        const marker = L.marker([rota.lat, rota.lon], { icon: numIcon })
+                            .bindPopup(`<b>${numero}. ${rota.clienteData.estabelecimento}</b><br>${rota.clienteData.endereco}<br>${rota.clienteData.bairro || ''} - ${rota.clienteData.municipio || ''}`);
+                        
+                        mapMarkersGroup.addLayer(marker);
+                    }
 
-        mostrarCarregamento(false);
-        renderizarMapaELegenda(); // Chama a função que desenha os pinos e a legenda
-
-        if (mapMarkersGroup.getLayers().length > 0) {
-            mapInstance.fitBounds(mapMarkersGroup.getBounds(), { padding: [50, 50] });
-        }
-
-        if (enderecosNaoEncontrados > 0) {
-            alert(`Aviso: ${enderecosNaoEncontrados} endereço(s) selecionado(s) não puderam ser localizados com exatidão no mapa. No entanto, eles foram adicionados na legenda e você pode arrastá-los normalmente.`);
-        }
-        */
-    }
-
-    let mapInstance = null;
-    let mapMarkersGroup = null;
-    let rotasMapeadas = [];
-
-    function renderizarMapaELegenda() {
-        if (!mapMarkersGroup) return; // Segurança caso o grupo não exista
-        mapMarkersGroup.clearLayers();
-        const barraMarcadores = document.getElementById('barra-marcadores');
-        barraMarcadores.innerHTML = '';
-
-        rotasMapeadas.forEach((rota, index) => {
-            const numero = index + 1;
-
-            if (rota.found) {
-                const numIcon = L.divIcon({
-                    className: 'custom-leaflet-icon',
-                    html: `<div class="pin-mapa"><span>${numero}</span></div>`,
-                    iconSize: [34, 34],
-                    iconAnchor: [17, 34], 
-                    popupAnchor: [0, -34] 
+                    const legendaItem = document.createElement('div');
+                    legendaItem.className = 'item-legenda-mapa';
+                    legendaItem.draggable = true;
+                    legendaItem.setAttribute('data-original-index', index);
+                    legendaItem.innerHTML = `
+                        <div class="pin-barra">${numero}</div>
+                        <span style="font-size: 0.9rem; font-weight: 500;">${rota.clienteData.estabelecimento} ${!rota.found ? '(S/ Pino)' : ''}</span>
+                        <i class="fas fa-times btn-remover-legenda" title="Remover da Rota" onclick="removerClienteMapa(${index}, event)"></i>
+                    `;
+                    barraMarcadores.appendChild(legendaItem);
                 });
+
+                inicializarDragAndDrop();
+            }
+
+            function inicializarDragAndDrop() {
+                const items = document.querySelectorAll('.item-legenda-mapa');
+                const container = document.getElementById('barra-marcadores');
+
+                items.forEach(item => {
+                    item.addEventListener('dragstart', (e) => {
+                        item.classList.add('dragging');
+                        if(e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+                    });
                     
-                    const marker = L.marker([rota.lat, rota.lon], { icon: numIcon })
-                        .bindPopup(`<b>${numero}. ${rota.clienteData.estabelecimento}</b><br>${rota.clienteData.endereco}<br>${rota.clienteData.bairro || ''} - ${rota.clienteData.municipio || ''}`);
-                    
-                    mapMarkersGroup.addLayer(marker);
-                }
+                    item.addEventListener('dragend', () => {
+                        item.classList.remove('dragging');
+                        atualizarOrdemRotas(); 
+                    });
+                });
 
-                const legendaItem = document.createElement('div');
-                legendaItem.className = 'item-legenda-mapa';
-                legendaItem.draggable = true;
-                legendaItem.setAttribute('data-original-index', index);
-                legendaItem.innerHTML = `
-                    <div class="pin-barra">${numero}</div>
-                    <span style="font-size: 0.9rem; font-weight: 500;">${rota.clienteData.estabelecimento} ${!rota.found ? '(S/ Pino)' : ''}</span>
-                    <i class="fas fa-times btn-remover-legenda" title="Remover da Rota" onclick="removerClienteMapa(${index}, event)"></i>
-                `;
-                barraMarcadores.appendChild(legendaItem);
-            });
+                container.ondragover = e => {
+                    e.preventDefault(); 
+                    const afterElement = getDragAfterElement(container, e.clientX);
+                    const draggable = document.querySelector('.dragging');
+                    if (draggable) {
+                        if (afterElement == null) {
+                            container.appendChild(draggable);
+                        } else {
+                            container.insertBefore(draggable, afterElement);
+                        }
+                    }
+                };
+            }
 
-            inicializarDragAndDrop();
-        }
+            function getDragAfterElement(container, x) {
+                const draggableElements = [...container.querySelectorAll('.item-legenda-mapa:not(.dragging)')];
+                return draggableElements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = x - box.left - box.width / 2; 
+                    if (offset < 0 && offset > closest.offset) {
+                        return { offset: offset, element: child };
+                    } else {
+                        return closest;
+                    }
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+            }
 
-        function inicializarDragAndDrop() {
-            const items = document.querySelectorAll('.item-legenda-mapa');
-            const container = document.getElementById('barra-marcadores');
-
-            items.forEach(item => {
-                item.addEventListener('dragstart', (e) => {
-                    item.classList.add('dragging');
-                    if(e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+            function atualizarOrdemRotas() {
+                const items = document.querySelectorAll('.item-legenda-mapa');
+                const novaOrdem = [];
+                
+                items.forEach(item => {
+                    const originalIndex = parseInt(item.getAttribute('data-original-index'));
+                    novaOrdem.push(rotasMapeadas[originalIndex]);
                 });
                 
-                item.addEventListener('dragend', () => {
-                    item.classList.remove('dragging');
-                    atualizarOrdemRotas(); 
-                });
-            });
+                rotasMapeadas = novaOrdem;
+                renderizarMapaELegenda(); 
+            }
 
-            container.ondragover = e => {
-                e.preventDefault(); 
-                const afterElement = getDragAfterElement(container, e.clientX);
-                const draggable = document.querySelector('.dragging');
-                if (draggable) {
-                    if (afterElement == null) {
-                        container.appendChild(draggable);
-                    } else {
-                        container.insertBefore(draggable, afterElement);
+            function removerClienteMapa(index, event) {
+                if(event) event.stopPropagation(); 
+                
+                const clienteRemovido = rotasMapeadas[index].clienteData;
+                
+                rotasMapeadas.splice(index, 1);
+                
+                const checkboxes = document.querySelectorAll('.checkbox-cliente-rota');
+                checkboxes.forEach(cb => {
+                    const cbData = JSON.parse(cb.value);
+                    if (cbData.cnpj === clienteRemovido.cnpj && cbData.estabelecimento === clienteRemovido.estabelecimento) {
+                        cb.checked = false;
+                    }
+                });
+
+                if (rotasMapeadas.length === 0) {
+                    fecharModalMapa();
+                } else {
+                    renderizarMapaELegenda();
+                    if (mapMarkersGroup.getLayers().length > 0) {
+                        mapInstance.fitBounds(mapMarkersGroup.getBounds(), { padding: [50, 50] });
                     }
                 }
-            };
-        }
+            }
 
-        function getDragAfterElement(container, x) {
-            const draggableElements = [...container.querySelectorAll('.item-legenda-mapa:not(.dragging)')];
-            return draggableElements.reduce((closest, child) => {
-                const box = child.getBoundingClientRect();
-                const offset = x - box.left - box.width / 2; 
-                if (offset < 0 && offset > closest.offset) {
-                    return { offset: offset, element: child };
+            function fecharModalMapa() {
+                document.getElementById('modal-mapa').style.display = 'none';
+            }
+            
+            async function salvarNovaRota() {
+                const dataEscolhida = document.getElementById('data-nova-rota').value;
+                if (!dataEscolhida) { alert("Atenção: Você precisa selecionar a Data da Rota."); return; }
+
+                if (!placaSelecionadaNovaRota) { alert("Atenção: Você precisa selecionar uma Placa para o veículo desta rota."); return; }
+                
+                // SUBSTITUIDO: Valida e utiliza o array baseado no Map da memória
+                if (clientesSelecionadosMap.size === 0 && (!rotasMapeadas || rotasMapeadas.length === 0)) { 
+                    alert("Atenção: Você precisa selecionar pelo menos um cliente para a rota."); 
+                    return; 
+                }
+                
+                mostrarCarregamento(true);
+
+                let clientesParaSalvar = [];
+                
+                if (rotasMapeadas && rotasMapeadas.length > 0) {
+                    clientesParaSalvar = rotasMapeadas.map(r => {
+                        let data = JSON.parse(JSON.stringify(r.clienteData));
+                        data.lat = r.lat;
+                        data.lon = r.lon;
+                        return data;
+                    });
                 } else {
-                    return closest;
+                    // ADICIONADO: Pega os valores salvos na memória, ignorando a pesquisa que escondeu itens
+                    clientesParaSalvar = Array.from(clientesSelecionadosMap.values());
                 }
-            }, { offset: Number.NEGATIVE_INFINITY }).element;
-        }
+                
+                const listaParaApp = clientesParaSalvar.map(clienteData => {
+                    let enderecoFormatado = clienteData.endereco || '';
+                    if(clienteData.numero) enderecoFormatado += `, ${clienteData.numero}`;
+                    if(clienteData.bairro) enderecoFormatado += ` - ${clienteData.bairro}`;
+                    if(clienteData.municipio) enderecoFormatado += ` / ${clienteData.municipio}`;
+                    if(clienteData.cep) enderecoFormatado += ` - CEP: ${clienteData.cep}`;
 
-        function atualizarOrdemRotas() {
-            const items = document.querySelectorAll('.item-legenda-mapa');
-            const novaOrdem = [];
-            
-            items.forEach(item => {
-                const originalIndex = parseInt(item.getAttribute('data-original-index'));
-                novaOrdem.push(rotasMapeadas[originalIndex]);
-            });
-            
-            rotasMapeadas = novaOrdem;
-            renderizarMapaELegenda(); 
-        }
-
-        function removerClienteMapa(index, event) {
-            if(event) event.stopPropagation(); 
-            
-            const clienteRemovido = rotasMapeadas[index].clienteData;
-            
-            rotasMapeadas.splice(index, 1);
-            
-            const checkboxes = document.querySelectorAll('.checkbox-cliente-rota');
-            checkboxes.forEach(cb => {
-                const cbData = JSON.parse(cb.value);
-                if (cbData.cnpj === clienteRemovido.cnpj && cbData.estabelecimento === clienteRemovido.estabelecimento) {
-                    cb.checked = false;
-                }
-            });
-
-            if (rotasMapeadas.length === 0) {
-                fecharModalMapa();
-            } else {
-                renderizarMapaELegenda();
-                if (mapMarkersGroup.getLayers().length > 0) {
-                    mapInstance.fitBounds(mapMarkersGroup.getBounds(), { padding: [50, 50] });
-                }
-            }
-        }
-
-        function fecharModalMapa() {
-            document.getElementById('modal-mapa').style.display = 'none';
-        }
-        
-        async function salvarNovaRota() {
-            const dataEscolhida = document.getElementById('data-nova-rota').value;
-            if (!dataEscolhida) { alert("Atenção: Você precisa selecionar a Data da Rota."); return; }
-
-            if (!placaSelecionadaNovaRota) { alert("Atenção: Você precisa selecionar uma Placa para o veículo desta rota."); return; }
-            
-            // SUBSTITUIDO: Valida e utiliza o array baseado no Map da memória
-            if (clientesSelecionadosMap.size === 0 && (!rotasMapeadas || rotasMapeadas.length === 0)) { 
-                alert("Atenção: Você precisa selecionar pelo menos um cliente para a rota."); 
-                return; 
-            }
-            
-            mostrarCarregamento(true);
-
-            let clientesParaSalvar = [];
-            
-            if (rotasMapeadas && rotasMapeadas.length > 0) {
-                clientesParaSalvar = rotasMapeadas.map(r => {
-                    let data = JSON.parse(JSON.stringify(r.clienteData));
-                    data.lat = r.lat;
-                    data.lon = r.lon;
-                    return data;
+                    return {
+                        estabelecimento: clienteData.estabelecimento,
+                        cnpj: clienteData.cnpj,
+                        endereco: enderecoFormatado,
+                        numero: clienteData.numero,
+                        bairro: clienteData.bairro,
+                        municipio: clienteData.municipio,
+                        cep: clienteData.cep,
+                        lat: null, 
+                        lon: null, 
+                        horario_abre_1: clienteData.horario_abre_1 || '',
+                        horario_fecha_1: clienteData.horario_fecha_1 || '',
+                        horario_abre_2: clienteData.horario_abre_2 || '',
+                        horario_fecha_2: clienteData.horario_fecha_2 || '',
+                        concluido: false,
+                        status: null
+                    };
                 });
-            } else {
-                // ADICIONADO: Pega os valores salvos na memória, ignorando a pesquisa que escondeu itens
-                clientesParaSalvar = Array.from(clientesSelecionadosMap.values());
-            }
-            
-            const listaParaApp = clientesParaSalvar.map(clienteData => {
-                let enderecoFormatado = clienteData.endereco || '';
-                if(clienteData.numero) enderecoFormatado += `, ${clienteData.numero}`;
-                if(clienteData.bairro) enderecoFormatado += ` - ${clienteData.bairro}`;
-                if(clienteData.municipio) enderecoFormatado += ` / ${clienteData.municipio}`;
-                if(clienteData.cep) enderecoFormatado += ` - CEP: ${clienteData.cep}`;
-
-                return {
-                    estabelecimento: clienteData.estabelecimento,
-                    cnpj: clienteData.cnpj,
-                    endereco: enderecoFormatado,
-                    numero: clienteData.numero,
-                    bairro: clienteData.bairro,
-                    municipio: clienteData.municipio,
-                    cep: clienteData.cep,
-                    lat: null, 
-                    lon: null, 
-                    horario_abre_1: clienteData.horario_abre_1 || '',
-                    horario_fecha_1: clienteData.horario_fecha_1 || '',
-                    horario_abre_2: clienteData.horario_abre_2 || '',
-                    horario_fecha_2: clienteData.horario_fecha_2 || '',
-                    concluido: false,
-                    status: null
-                };
-            });
-            
-            let idMotorista = motoristaSelecionadoNovaRotaId;
-            if (!idMotorista) {
-                const { data: veiculoData } = await _supabase.from('veiculos').select('motorista_atual_id').eq('placa', placaSelecionadaNovaRota).single();
-                idMotorista = veiculoData ? veiculoData.motorista_atual_id : null;
-            }
-
-            const { error } = await _supabase.from('rotas_prontas').insert([{
-                veiculo_placa: placaSelecionadaNovaRota,
-                motorista_id: idMotorista,
-                motorista_nome: motoristaSelecionadoNovaRotaNome,
-                data_rota: dataEscolhida,
-                status: 'pronta',
-                lista_entregas: listaParaApp
-            }]);
-
-            mostrarCarregamento(false);
-
-            if (error) {
-                alert("Erro ao criar a rota pronta: " + error.message);
-            } else {
-                alert("Rota salva com sucesso! Ela já está disponível em 'Rotas prontas'.");
                 
-                document.getElementById('data-nova-rota').value = '';
-                document.getElementById('filtro-cliente-montar-rota').value = '';
-                document.getElementById('check-todos').checked = false;
-                placaSelecionadaNovaRota = '';
-                document.getElementById('placa-selecionada-display').style.display = 'none';
-                motoristaSelecionadoNovaRotaId = null;
-                motoristaSelecionadoNovaRotaNome = '';
-                document.getElementById('motorista-selecionado-display').style.display = 'none';
-                
-                rotasMapeadas = [];
-                clientesSelecionadosMap.clear(); // ADICIONADO: Limpa a memória após sucesso
-                
-                renderizarTabelaMontarRota(listaClientesLocal);
-            }
-        }
+                let idMotorista = motoristaSelecionadoNovaRotaId;
+                if (!idMotorista) {
+                    const { data: veiculoData } = await _supabase.from('veiculos').select('motorista_atual_id').eq('placa', placaSelecionadaNovaRota).single();
+                    idMotorista = veiculoData ? veiculoData.motorista_atual_id : null;
+                }
 
-        // ==========================================
-        // 7. CARREGAR ROTAS PRONTAS
-        // ==========================================
-        async function carregarRotasProntas() {
-            mostrarCarregamento(true);
+                const { error } = await _supabase.from('rotas_prontas').insert([{
+                    veiculo_placa: placaSelecionadaNovaRota,
+                    motorista_id: idMotorista,
+                    motorista_nome: motoristaSelecionadoNovaRotaNome,
+                    data_rota: dataEscolhida,
+                    status: 'pronta',
+                    lista_entregas: listaParaApp
+                }]);
 
-            const { data, error } = await _supabase
-                .from('rotas_prontas')
-                .select('*')
-                .order('data_rota', { ascending: false });
-
-            if (error) {
-                console.error("Erro ao buscar rotas prontas:", error);
                 mostrarCarregamento(false);
-                return;
+
+                if (error) {
+                    alert("Erro ao criar a rota pronta: " + error.message);
+                } else {
+                    alert("Rota salva com sucesso! Ela já está disponível em 'Rotas prontas'.");
+                    
+                    document.getElementById('data-nova-rota').value = '';
+                    document.getElementById('filtro-cliente-montar-rota').value = '';
+                    document.getElementById('check-todos').checked = false;
+                    placaSelecionadaNovaRota = '';
+                    document.getElementById('placa-selecionada-display').style.display = 'none';
+                    motoristaSelecionadoNovaRotaId = null;
+                    motoristaSelecionadoNovaRotaNome = '';
+                    document.getElementById('motorista-selecionado-display').style.display = 'none';
+                    
+                    rotasMapeadas = [];
+                    clientesSelecionadosMap.clear(); // ADICIONADO: Limpa a memória após sucesso
+                    
+                    renderizarTabelaMontarRota(listaClientesLocal);
+                }
             }
 
-            const tbody = document.querySelector('#tabela-rotas-prontas tbody');
+            // ==========================================
+            // 7. CARREGAR ROTAS PRONTAS
+            // ==========================================
+            async function carregarRotasProntas() {
+                mostrarCarregamento(true);
 
-            if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhuma rota pronta encontrada.</td></tr>';
-                mostrarCarregamento(false);
-                return;
-            }
+                const { data, error } = await _supabase
+                    .from('rotas_prontas')
+                    .select('*')
+                    .order('data_rota', { ascending: false });
 
-            tbody.innerHTML = data.map(rota => {
-                const dataFormatada = formatarDataBR(rota.data_rota);
-                const qtdEntregas = rota.lista_entregas ? rota.lista_entregas.length : 0;
-                
-                return `
-                <tr>
-                    <td><b>${dataFormatada}</b></td>
-                    <td><b><span style="color: var(--text-dark);">${rota.veiculo_placa || '--'}</span></b></td>
-                    <td>${qtdEntregas} entregas</td>
-                    <td><span class="badge-sucesso">${rota.status ? rota.status.toUpperCase() : 'PRONTA'}</span></td>
-                    <td style="text-align: center;">
-                        <div style="display: flex; justify-content: center; gap: 10px; align-items: center;">
-                            <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="abrirModalDetalhesRota('${rota.id}')"><i class="fas fa-eye"></i> Detalhes</button>
-                            <i class="fas fa-times btn-icon-danger" title="Excluir Rota" onclick="confirmarExclusaoRota('${rota.id}', '${rota.veiculo_placa}')" style="cursor: pointer; font-size: 1.3rem;"></i>
-                        </div>
-                    </td>
-                </tr>
-                `;
-            }).join('');
+                if (error) {
+                    console.error("Erro ao buscar rotas prontas:", error);
+                    mostrarCarregamento(false);
+                    return;
+                }
 
-            mostrarCarregamento(false);
-        }
+                const tbody = document.querySelector('#tabela-rotas-prontas tbody');
 
-        // ==========================================
-        // 8. LÓGICA DE EXIBIÇÃO DE DETALHES E EXCLUSÃO DE ROTA PRONTA
-        // ==========================================
-        async function abrirModalDetalhesRota(idRota) {
-            mostrarCarregamento(true);
-            
-            const { data, error } = await _supabase
-                .from('rotas_prontas')
-                .select('*')
-                .eq('id', idRota)
-                .single();
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhuma rota pronta encontrada.</td></tr>';
+                    mostrarCarregamento(false);
+                    return;
+                }
 
-            mostrarCarregamento(false);
-
-            if (error) {
-                alert("Erro ao buscar detalhes da rota: " + error.message);
-                return;
-            }
-
-            const containerConteudo = document.getElementById('conteudo-detalhes-rota');
-            const dataFormatada = formatarDataBR(data.data_rota);
-            const qtdEntregas = data.lista_entregas ? data.lista_entregas.length : 0;
-            
-            let htmlConteudo = `
-                <div class="detalhes-info-row">
-                    <span class="detalhes-info-label">Data da Rota:</span>
-                    <span class="detalhes-info-value">${dataFormatada}</span>
-                </div>
-                <div class="detalhes-info-row">
-                    <span class="detalhes-info-label">Veículo (Placa):</span>
-                    <span class="detalhes-info-value">${data.veiculo_placa || 'Não informada'}</span>
-                </div>
-                <div class="detalhes-info-row">
-                    <span class="detalhes-info-label">Motorista:</span>
-                    <span class="detalhes-info-value">${data.motorista_nome || 'Não informado'}</span>
-                </div>
-                <div class="detalhes-info-row">
-                    <span class="detalhes-info-label">Status Atual:</span>
-                    <span class="detalhes-info-value" style="color: var(--success-green); font-weight: bold;">${data.status ? data.status.toUpperCase() : 'PRONTA'}</span>
-                </div>
-                <div class="detalhes-info-row" style="border-bottom: none;">
-                    <span class="detalhes-info-label">Total de Entregas:</span>
-                    <span class="detalhes-info-value">${qtdEntregas}</span>
-                </div>
-                
-                <h4 style="margin-bottom: 10px; color: var(--primary-blue);">Lista de Clientes (Ordem de Entrega)</h4>
-                <ul class="lista-entregas-detalhe">
-            `;
-
-            if (qtdEntregas > 0) {
-                data.lista_entregas.forEach((entrega, index) => {
-                    htmlConteudo += `
-                        <li>
-                            <span class="entrega-estabelecimento">${index + 1}. ${entrega.estabelecimento}</span>
-                            <span class="entrega-endereco"><i class="fas fa-map-marker-alt" style="color: #bbb;"></i> ${entrega.endereco}</span>
-                            <span class="entrega-cnpj">CNPJ: ${entrega.cnpj || 'Não informado'}</span>
-                        </li>
+                tbody.innerHTML = data.map(rota => {
+                    const dataFormatada = formatarDataBR(rota.data_rota);
+                    const qtdEntregas = rota.lista_entregas ? rota.lista_entregas.length : 0;
+                    
+                    return `
+                    <tr>
+                        <td><b>${dataFormatada}</b></td>
+                        <td><b><span style="color: var(--text-dark);">${rota.veiculo_placa || '--'}</span></b></td>
+                        <td>${qtdEntregas} entregas</td>
+                        <td><span class="badge-sucesso">${rota.status ? rota.status.toUpperCase() : 'PRONTA'}</span></td>
+                        <td style="text-align: center;">
+                            <div style="display: flex; justify-content: center; gap: 10px; align-items: center;">
+                                <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="abrirModalDetalhesRota('${rota.id}')"><i class="fas fa-eye"></i> Detalhes</button>
+                                <i class="fas fa-times btn-icon-danger" title="Excluir Rota" onclick="confirmarExclusaoRota('${rota.id}', '${rota.veiculo_placa}')" style="cursor: pointer; font-size: 1.3rem;"></i>
+                            </div>
+                        </td>
+                    </tr>
                     `;
-                });
-            } else {
-                htmlConteudo += `<li style="text-align: center; color: #888;">Nenhum cliente associado a esta rota.</li>`;
-            }
+                }).join('');
 
-            htmlConteudo += `</ul>`;
-            
-            containerConteudo.innerHTML = htmlConteudo;
-            document.getElementById('modal-detalhes-rota').style.display = 'flex';
-        }
-
-        function fecharModalDetalhesRota() {
-            document.getElementById('modal-detalhes-rota').style.display = 'none';
-        }
-
-        let rotaIdParaExcluir = null;
-
-        function confirmarExclusaoRota(idRota, placaRota) {
-            rotaIdParaExcluir = idRota;
-            document.getElementById('texto-exclusao-rota').innerHTML = `Deseja realmente EXCLUIR a rota do veículo <b>${placaRota || 'Sem Placa'}</b>? Esta ação não pode ser desfeita.`;
-            document.getElementById('modal-excluir-rota').style.display = 'flex';
-        }
-
-        function fecharModalExcluirRota() {
-            document.getElementById('modal-excluir-rota').style.display = 'none';
-            rotaIdParaExcluir = null;
-        }
-
-        async function executarExclusaoRota() {
-            if (!rotaIdParaExcluir) return;
-            
-            mostrarCarregamento(true);
-            
-            const { error } = await _supabase
-                .from('rotas_prontas')
-                .delete()
-                .eq('id', rotaIdParaExcluir);
-                
-            if (error) {
-                alert("Erro ao excluir a rota: " + error.message);
                 mostrarCarregamento(false);
-            } else {
-                fecharModalExcluirRota();
-                carregarRotasProntas(); 
-            }
-        }
-
-
-        // ==========================================
-        // UTILITÁRIOS, NAVEGAÇÃO E EVENTOS
-        // ==========================================
-        function mostrarCarregamento(mostrar) {
-            document.getElementById('loading-area').style.display = mostrar ? 'flex' : 'none';
-        }
-
-        function abrirSecao(id) {
-            document.querySelectorAll('.secao').forEach(s => s.style.display = 'none');
-            document.getElementById('sec-' + id).style.display = 'block';
-            
-            if(id === 'motoristas') carregarMotoristas();
-            if(id === 'rotas') carregarRotas();
-            if(id === 'frota') carregarFrota();
-            
-            if(id === 'clientes' || id === 'montar-rota') {
-                carregarClientes();
             }
 
-            if(id === 'rotas-prontas') {
-                carregarRotasProntas();
+            // ==========================================
+            // 8. LÓGICA DE EXIBIÇÃO DE DETALHES E EXCLUSÃO DE ROTA PRONTA
+            // ==========================================
+            async function abrirModalDetalhesRota(idRota) {
+                mostrarCarregamento(true);
+                
+                const { data, error } = await _supabase
+                    .from('rotas_prontas')
+                    .select('*')
+                    .eq('id', idRota)
+                    .single();
+
+                mostrarCarregamento(false);
+
+                if (error) {
+                    alert("Erro ao buscar detalhes da rota: " + error.message);
+                    return;
+                }
+
+                const containerConteudo = document.getElementById('conteudo-detalhes-rota');
+                const dataFormatada = formatarDataBR(data.data_rota);
+                const qtdEntregas = data.lista_entregas ? data.lista_entregas.length : 0;
+                
+                let htmlConteudo = `
+                    <div class="detalhes-info-row">
+                        <span class="detalhes-info-label">Data da Rota:</span>
+                        <span class="detalhes-info-value">${dataFormatada}</span>
+                    </div>
+                    <div class="detalhes-info-row">
+                        <span class="detalhes-info-label">Veículo (Placa):</span>
+                        <span class="detalhes-info-value">${data.veiculo_placa || 'Não informada'}</span>
+                    </div>
+                    <div class="detalhes-info-row">
+                        <span class="detalhes-info-label">Motorista:</span>
+                        <span class="detalhes-info-value">${data.motorista_nome || 'Não informado'}</span>
+                    </div>
+                    <div class="detalhes-info-row">
+                        <span class="detalhes-info-label">Status Atual:</span>
+                        <span class="detalhes-info-value" style="color: var(--success-green); font-weight: bold;">${data.status ? data.status.toUpperCase() : 'PRONTA'}</span>
+                    </div>
+                    <div class="detalhes-info-row" style="border-bottom: none;">
+                        <span class="detalhes-info-label">Total de Entregas:</span>
+                        <span class="detalhes-info-value">${qtdEntregas}</span>
+                    </div>
+                    
+                    <h4 style="margin-bottom: 10px; color: var(--primary-blue);">Lista de Clientes (Ordem de Entrega)</h4>
+                    <ul class="lista-entregas-detalhe">
+                `;
+
+                if (qtdEntregas > 0) {
+                    data.lista_entregas.forEach((entrega, index) => {
+                        htmlConteudo += `
+                            <li>
+                                <span class="entrega-estabelecimento">${index + 1}. ${entrega.estabelecimento}</span>
+                                <span class="entrega-endereco"><i class="fas fa-map-marker-alt" style="color: #bbb;"></i> ${entrega.endereco}</span>
+                                <span class="entrega-cnpj">CNPJ: ${entrega.cnpj || 'Não informado'}</span>
+                            </li>
+                        `;
+                    });
+                } else {
+                    htmlConteudo += `<li style="text-align: center; color: #888;">Nenhum cliente associado a esta rota.</li>`;
+                }
+
+                htmlConteudo += `</ul>`;
+                
+                containerConteudo.innerHTML = htmlConteudo;
+                document.getElementById('modal-detalhes-rota').style.display = 'flex';
             }
-            
-            if(id === 'dashboard') carregarRotas(); 
-        }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            abrirSecao('dashboard'); 
-            
-            // --- INÍCIO DAS MÁSCARAS DE FORMULÁRIO ---
-            
-            document.getElementById('mot-nome').addEventListener('input', function(e) {
-                let palavras = e.target.value.split(' ');
-                let formatado = palavras.map(palavra => {
-                    return palavra.charAt(0).toUpperCase() + palavra.slice(1);
-                }).join(' ');
-                e.target.value = formatado;
-            });
+            function fecharModalDetalhesRota() {
+                document.getElementById('modal-detalhes-rota').style.display = 'none';
+            }
 
-            document.getElementById('mot-documento').addEventListener('input', function(e) {
-                let valor = e.target.value.replace(/\D/g, ''); 
-                if (valor.length > 11) valor = valor.slice(0, 11); 
+            let rotaIdParaExcluir = null;
+
+            function confirmarExclusaoRota(idRota, placaRota) {
+                rotaIdParaExcluir = idRota;
+                document.getElementById('texto-exclusao-rota').innerHTML = `Deseja realmente EXCLUIR a rota do veículo <b>${placaRota || 'Sem Placa'}</b>? Esta ação não pode ser desfeita.`;
+                document.getElementById('modal-excluir-rota').style.display = 'flex';
+            }
+
+            function fecharModalExcluirRota() {
+                document.getElementById('modal-excluir-rota').style.display = 'none';
+                rotaIdParaExcluir = null;
+            }
+
+            async function executarExclusaoRota() {
+                if (!rotaIdParaExcluir) return;
                 
-                valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
-                valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
-                valor = valor.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+                mostrarCarregamento(true);
                 
-                e.target.value = valor;
-            });
+                const { error } = await _supabase
+                    .from('rotas_prontas')
+                    .delete()
+                    .eq('id', rotaIdParaExcluir);
+                    
+                if (error) {
+                    alert("Erro ao excluir a rota: " + error.message);
+                    mostrarCarregamento(false);
+                } else {
+                    fecharModalExcluirRota();
+                    carregarRotasProntas(); 
+                }
+            }
 
-            document.getElementById('mot-toxicologico').addEventListener('input', function(e) {
-                let valor = e.target.value.replace(/\D/g, ''); 
-                if (valor.length > 8) valor = valor.slice(0, 8); 
+
+            // ==========================================
+            // UTILITÁRIOS, NAVEGAÇÃO E EVENTOS
+            // ==========================================
+            function mostrarCarregamento(mostrar) {
+                document.getElementById('loading-area').style.display = mostrar ? 'flex' : 'none';
+            }
+
+            function abrirSecao(id) {
+                document.querySelectorAll('.secao').forEach(s => s.style.display = 'none');
+                document.getElementById('sec-' + id).style.display = 'block';
                 
-                valor = valor.replace(/(\d{2})(\d)/, "$1/$2");
-                valor = valor.replace(/(\d{2})(\d)/, "$1/$2");
+                if(id === 'motoristas') carregarMotoristas();
+                if(id === 'rotas') carregarRotas();
+                if(id === 'frota') carregarFrota();
                 
-                e.target.value = valor;
-            });
+                if(id === 'clientes' || id === 'montar-rota') {
+                    carregarClientes();
+                }
 
-            document.getElementById('filtro-cliente-cnpj').addEventListener('input', function(e) {
-                 e.target.value = aplicarMascaraCNPJParaInput(e.target.value);
-            });
-            
-            document.getElementById('cli-cep-edit').addEventListener('input', function(e) {
-                 e.target.value = aplicarMascaraCEPParaInput(e.target.value);
-            });
+                if(id === 'rotas-prontas') {
+                    carregarRotasProntas();
+                }
+                
+                if(id === 'dashboard') carregarRotas(); 
+            }
 
-            // ADICIONADO: Deixa a placa digitada automaticamente em maiúscula no novo modal
-            document.getElementById('vei-placa').addEventListener('input', function(e) {
-                 e.target.value = e.target.value.toUpperCase();
+            document.addEventListener('DOMContentLoaded', () => {
+                abrirSecao('dashboard'); 
+                
+                // EVENTO DE LOGIN (ENTER)
+                const inputSenha = document.getElementById('login-senha');
+                if(inputSenha) {
+                    inputSenha.addEventListener('keypress', function (e) {
+                        if (e.key === 'Enter') {
+                            efetuarLogin();
+                        }
+                    });
+                }
+                
+                // --- INÍCIO DAS MÁSCARAS DE FORMULÁRIO ---
+                
+                document.getElementById('mot-nome').addEventListener('input', function(e) {
+                    let palavras = e.target.value.split(' ');
+                    let formatado = palavras.map(palavra => {
+                        return palavra.charAt(0).toUpperCase() + palavra.slice(1);
+                    }).join(' ');
+                    e.target.value = formatado;
+                });
+
+                document.getElementById('mot-documento').addEventListener('input', function(e) {
+                    let valor = e.target.value.replace(/\D/g, ''); 
+                    if (valor.length > 11) valor = valor.slice(0, 11); 
+                    
+                    valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
+                    valor = valor.replace(/(\d{3})(\d)/, "$1.$2");
+                    valor = valor.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+                    
+                    e.target.value = valor;
+                });
+
+                document.getElementById('mot-toxicologico').addEventListener('input', function(e) {
+                    let valor = e.target.value.replace(/\D/g, ''); 
+                    if (valor.length > 8) valor = valor.slice(0, 8); 
+                    
+                    valor = valor.replace(/(\d{2})(\d)/, "$1/$2");
+                    valor = valor.replace(/(\d{2})(\d)/, "$1/$2");
+                    
+                    e.target.value = valor;
+                });
+
+                document.getElementById('filtro-cliente-cnpj').addEventListener('input', function(e) {
+                     e.target.value = aplicarMascaraCNPJParaInput(e.target.value);
+                });
+                
+                // Corrigido para não quebrar a compilação
+                const elCepEdit = document.getElementById('cli-cep-edit');
+                if (elCepEdit) {
+                    elCepEdit.addEventListener('input', function(e) {
+                         e.target.value = aplicarMascaraCEPParaInput(e.target.value);
+                    });
+                }
+
+                // ADICIONADO: Deixa a placa digitada automaticamente em maiúscula no novo modal
+                const elVeiPlaca = document.getElementById('vei-placa');
+                if (elVeiPlaca) {
+                    elVeiPlaca.addEventListener('input', function(e) {
+                         e.target.value = e.target.value.toUpperCase();
+                    });
+                }
+                
             });
-            
-        });
     </script>
 </body>
 </html>
