@@ -376,6 +376,12 @@
                         <canvas id="graficoVeiculos"></canvas>
                     </div>
                 </div>
+                <div class="chart-box">
+                    <div class="chart-box-title" id="tituloGraficoHoje">Progresso das Entregas (Hoje)</div>
+                    <div class="canvas-container">
+                        <canvas id="graficoEntregasHoje"></canvas>
+                    </div>
+                </div>
                 <div class="chart-box" style="grid-column: 1 / -1;">
                     <div class="chart-box-title">Veículos com Mais Tempo em Rota (Minutos)</div>
                     <div class="canvas-container">
@@ -685,73 +691,6 @@
         </div>
     </div>
 
-    <div id="modal-exclusao" class="modal-overlay">
-        <div class="modal-container-small">
-            <h3 class="modal-confirm-title" style="color: var(--text-dark);">Excluir Motorista</h3>
-            <p id="texto-exclusao" class="modal-confirm-text">
-                Deseja realmente EXCLUIR o motorista X? Esta ação é irreversível e apagará o cadastro do sistema.
-            </p>
-            <div class="modal-confirm-actions">
-                <button type="button" class="btn-text-action" style="color: #666;" onclick="fecharModalExclusao()">CANCELAR</button>
-                <button type="button" class="btn-text-action" style="color: var(--danger-red);" onclick="executarExclusao()">EXCLUIR</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal-editar-cliente" class="modal-overlay">
-        <div class="modal-container">
-            <div class="modal-header">
-                <h3>Editar Cliente</h3>
-                <i class="fas fa-times btn-close" onclick="fecharModalEditarCliente()"></i>
-            </div>
-            
-            <form id="form-editar-cliente" onsubmit="salvarEdicaoCliente(event)">
-                <input type="hidden" id="cli-id-edit">
-                <div class="form-group">
-                    <label>Nome do Estabelecimento</label>
-                    <input type="text" id="cli-nome-edit" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>CNPJ</label>
-                    <input type="text" id="cli-cnpj-edit" required disabled style="background-color: #EEE; cursor: not-allowed;" title="O CNPJ não pode ser alterado">
-                </div>
-
-                <div class="row">
-                    <div class="form-group col" style="flex: 2;">
-                        <label>Endereço Principal (Rua / Avenida)</label>
-                        <input type="text" id="cli-endereco-edit">
-                    </div>
-                    <div class="form-group col" style="flex: 0.5;">
-                        <label>N°</label>
-                        <input type="text" id="cli-numero-edit">
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="form-group col">
-                        <label>Bairro</label>
-                        <input type="text" id="cli-bairro-edit">
-                    </div>
-                    <div class="form-group col">
-                        <label>Município</label>
-                        <input type="text" id="cli-municipio-edit">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>CEP</label>
-                    <input type="text" id="cli-cep-edit" placeholder="00000-000">
-                </div>
-
-                <div class="modal-actions">
-                    <button type="button" class="btn-secondary" onclick="fecharModalEditarCliente()">Cancelar</button>
-                    <button type="submit" class="btn-primary" id="btn-salvar-cli" style="justify-content: center;">Salvar Alterações</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <div id="modal-excluir-cliente" class="modal-overlay">
         <div class="modal-container-small">
             <h3 class="modal-confirm-title" style="color: var(--text-dark);">Excluir Cliente</h3>
@@ -809,23 +748,6 @@
                     </tr>
                 </tbody>
             </table>
-        </div>
-    </div>
-
-    <div id="modal-mapa" class="modal-overlay" style="z-index: 2000;">
-        <div class="modal-container" style="width: 90%; height: 85%; max-width: none; display: flex; flex-direction: column; padding: 0; overflow: hidden;">
-            <div class="modal-header" style="padding: 20px; background: var(--primary-blue); margin-bottom: 0; border-radius: 15px 15px 0 0; display: flex; flex-direction: column; align-items: stretch; gap: 15px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-                        <h3 style="color: white; margin: 0;">Visualização do Mapa</h3>
-                        <span id="mapa-placa-display" style="display: none; background: rgba(255,255,255,0.2); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.95rem; font-weight: 500;"></span>
-                    </div>
-                    <i class="fas fa-times btn-close" style="color: white; font-size: 1.5rem; cursor: pointer;" onclick="fecharModalMapa()"></i>
-                </div>
-                <div id="barra-marcadores" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px;">
-                </div>
-            </div>
-            <div id="map" style="flex: 1; width: 100%; z-index: 1;"></div>
         </div>
     </div>
 
@@ -907,16 +829,14 @@
         const SENHA_ADMIN = '1234'; 
 
         // Instâncias dos Gráficos e Arrays Locais
-        let instGraficoStatus, instGraficoVeiculos, instGraficoTempo;
+        let instGraficoStatus, instGraficoVeiculos, instGraficoTempo, instGraficoEntregasHoje;
         let listaClientesLocal = [];
         
-        // NOVO: Memória (Map) para manter os clientes selecionados mesmo após pesquisar/limpar
+        // Memória (Map) para manter os clientes selecionados mesmo após pesquisar/limpar
         let clientesSelecionadosMap = new Map();
 
         function formatarDataBR(dataString) {
             if (!dataString) return '--/--/----';
-            // Ajuste para evitar erro de timezone mudando o dia
-            // ADICIONADO: Remove a parte da hora (T00:00:00Z) para não bugar a formatação
             let dataLimpa = typeof dataString === 'string' ? dataString.split('T')[0] : dataString;
             const partes = dataLimpa.split('-');
             if (partes.length === 3) {
@@ -961,7 +881,13 @@
             // Variáveis para os KPIs e Gráficos
             let contadorTotal = 0, contadorSucesso = 0, contadorAvaria = 0, contadorFalha = 0;
             let estatisticasVeiculos = {}; 
-            let tempoPorVeiculo = {};       
+            let tempoPorVeiculo = {};        
+            
+            let hoje = new Date();
+            let dataHojeFormatadaBD = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
+            
+            // ADICIONADO: Variável para registrar o progresso de cada motorista (Usuário) hoje
+            let motoristasHoje = {};
 
             data.forEach(rota => {
                 const motoristaNome = rota.motoristas?.nome || 'Não identificado';
@@ -972,12 +898,12 @@
                     rota.lista_entregas.forEach(entrega => {
                         const dataReal = entrega.data_entrega || rota.data_inicio;
                         
+                        let dataObj = new Date(dataReal);
+                        let mes = String(dataObj.getMonth() + 1).padStart(2, '0');
+                        let dia = String(dataObj.getDate()).padStart(2, '0');
+                        let dataFormatadaBanco = `${dataObj.getFullYear()}-${mes}-${dia}`;
+                        
                         if (filtroData && dataReal) {
-                            const dataObj = new Date(dataReal);
-                            const mes = String(dataObj.getMonth() + 1).padStart(2, '0');
-                            const dia = String(dataObj.getDate()).padStart(2, '0');
-                            const dataFormatadaBanco = `${dataObj.getFullYear()}-${mes}-${dia}`;
-                            
                             if (dataFormatadaBanco !== filtroData) return; 
                         }
 
@@ -987,7 +913,6 @@
                         if (!tempoPorVeiculo[placaVeiculo]) tempoPorVeiculo[placaVeiculo] = 0;
 
                         estatisticasVeiculos[placaVeiculo]++;
-                        
                         if (entrega.avaria) contadorAvaria++;
                         
                         if (entrega.status === 'Entrega com Sucesso') {
@@ -1001,6 +926,18 @@
                             if (partesTempo.length === 2) {
                                 let minutosFloat = parseInt(partesTempo[0]) + (parseInt(partesTempo[1]) / 60);
                                 tempoPorVeiculo[placaVeiculo] += minutosFloat;
+                            }
+                        }
+
+                        // ADICIONADO: Coleta dos dados do usuário (motorista) que está rodando hoje para o gráfico
+                        if (dataFormatadaBanco === dataHojeFormatadaBD) {
+                            if (!motoristasHoje[motoristaNome]) {
+                                motoristasHoje[motoristaNome] = { total: 0, concluidas: 0 };
+                            }
+                            motoristasHoje[motoristaNome].total++;
+                            // Qualquer status que não seja "Pendente" conta como concluído na barra de progresso
+                            if (entrega.status && entrega.status !== 'Pendente') {
+                                motoristasHoje[motoristaNome].concluidas++;
                             }
                         }
 
@@ -1032,7 +969,8 @@
                 tbody.innerHTML = htmlRows;
             }
             
-            desenharGraficos(contadorSucesso, contadorAvaria, contadorFalha, estatisticasVeiculos, tempoPorVeiculo);
+            // ADICIONADO: Passando o objeto motoristasHoje para a função que desenha os gráficos
+            desenharGraficos(contadorSucesso, contadorAvaria, contadorFalha, estatisticasVeiculos, tempoPorVeiculo, dataHojeFormatadaBD, motoristasHoje);
             
             mostrarCarregamento(false);
         }
@@ -1042,7 +980,8 @@
             carregarRotas();
         }
 
-        function desenharGraficos(sucesso, avaria, falha, veiculosDict, tempoDict) {
+        // ADICIONADO: Adaptação na função para receber o dicionário motoristasHojeDict
+        function desenharGraficos(sucesso, avaria, falha, veiculosDict, tempoDict, dataHojeBD, motoristasHojeDict = {}) {
             
             const ctxStatus = document.getElementById('graficoStatus').getContext('2d');
             if (instGraficoStatus) instGraficoStatus.destroy();
@@ -1076,6 +1015,63 @@
                     }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+            });
+
+            // ADICIONADO: Ajuste do gráfico para exibir a porcentagem de conclusão por Usuário (Motorista)
+            document.getElementById('tituloGraficoHoje').innerText = `Progresso das Entregas (${formatarDataBR(dataHojeBD)})`;
+            const ctxEntregasHoje = document.getElementById('graficoEntregasHoje').getContext('2d');
+            if (instGraficoEntregasHoje) instGraficoEntregasHoje.destroy();
+
+            const labelsMotoristas = [];
+            const dadosProgresso = [];
+
+            // Se não houver rotas hoje, insere um fallback visual
+            if (Object.keys(motoristasHojeDict).length === 0) {
+                labelsMotoristas.push('Sem entregas hoje');
+                dadosProgresso.push(0);
+            } else {
+                for (const [nomeMotorista, stats] of Object.entries(motoristasHojeDict)) {
+                    labelsMotoristas.push(nomeMotorista);
+                    // Calcula a porcentagem
+                    const porcentagem = stats.total > 0 ? Math.round((stats.concluidas / stats.total) * 100) : 0;
+                    dadosProgresso.push(porcentagem);
+                }
+            }
+
+            instGraficoEntregasHoje = new Chart(ctxEntregasHoje, {
+                type: 'bar',
+                data: {
+                    labels: labelsMotoristas, // Exibe o nome de cada usuário/motorista logado com rota
+                    datasets: [{
+                        label: 'Progresso Concluído (%)',
+                        data: dadosProgresso, // Porcentagem do motorista
+                        backgroundColor: '#009688', // Teal para indicar progresso
+                        borderRadius: 6
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            max: 100, // Mantém a barra em 100% como teto
+                            ticks: {
+                                callback: function(value) { return value + "%" } // Adiciona o sinal de % no eixo Y
+                            }
+                        } 
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y + '% concluído'; // Mostra % ao passar o mouse
+                                }
+                            }
+                        }
+                    }
+                }
             });
 
             const labelsTempo = Object.keys(tempoDict);
@@ -1578,10 +1574,10 @@
         // ==========================================
         
         // ADICIONADO: Função para registrar check individual na "memória"
-        function toggleClienteRota(checkbox) {
+  function toggleClienteRota(checkbox) {
             try {
-                // Recupera os dados convertendo as aspas
-                const valParsed = checkbox.value.replace(/"/g, '"');
+                // CORREÇÃO: Decodifica o valor que foi transformado em string segura
+                const valParsed = checkbox.value;
                 const clienteObj = JSON.parse(valParsed);
                 
                 if (checkbox.checked) {
@@ -1603,7 +1599,40 @@
             }
 
             tbody.innerHTML = dados.map(cliente => {
-                const cliValue = JSON.stringify(cliente).replace(/"/g, '"');
+                // CORREÇÃO: Transforma o objeto em string e protege as aspas para o HTML não quebrar
+                const clienteString = JSON.stringify(cliente).replace(/"/g, '&quot;');
+                
+                const isChecked = clientesSelecionadosMap.has(cliente.cnpj) ? 'checked' : '';
+
+                return `
+                <tr>
+                    <td style="text-align: center;">
+                        <input type="checkbox" class="checkbox-custom checkbox-cliente-rota" value="${clienteString}" onchange="toggleClienteRota(this)" ${isChecked}>
+                    </td>
+                    <td><b>${cliente.estabelecimento || '--'}</b></td>
+                    <td>${cliente.cnpj || '--'}</td>
+                    <td>${cliente.endereco || '--'}</td>
+                    <td><b>${cliente.numero || '--'}</b></td>
+                    <td>${cliente.bairro || '--'}</td>
+                    <td>${cliente.municipio || '--'}</td>
+                    <td>${cliente.cep || '--'}</td>
+                </tr>
+                `;
+            }).join('');
+            
+            document.getElementById('check-todos').checked = false;
+        }
+
+        function renderizarTabelaMontarRota(dados) {
+            const tbody = document.querySelector('#tabela-clientes-montar-rota tbody');
+            
+            if (dados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Nenhum cliente disponível.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = dados.map(cliente => {
+                const cliValue = JSON.stringify(cliente).replace(/"/g, '&quot;');
                 
                 // ADICIONADO: Verifica na memória se o cliente já está marcado
                 const isChecked = clientesSelecionadosMap.has(cliente.cnpj) ? 'checked' : '';
@@ -1648,7 +1677,7 @@
                 
                 // ADICIONADO: Salva a seleção global na memória
                 try {
-                    const valParsed = cb.value.replace(/"/g, '"');
+                    const valParsed = cb.value;
                     const cbData = JSON.parse(valParsed);
                     if (masterCheckbox.checked) {
                         clientesSelecionadosMap.set(cbData.cnpj, cbData);
@@ -1682,7 +1711,7 @@
                 pontosDaRota.push(encodeURIComponent(enderecoCompleto.trim()));
             });
 
-            // O Google Maps aceita múltiplos destinos na URL separados por barra "/"
+            // O Google Maps aceita múltiplos destinos na URL de rotas (dir) separados por barra "/"
             const linkGoogleMaps = "https://www.google.com/maps/dir/" + pontosDaRota.join("/");
 
             mostrarCarregamento(false);
@@ -1738,52 +1767,53 @@
                     } else {
                         enderecosNaoEncontrados++;
                         rotasMapeadas.push({
-                            lat: null, lon: null,
-                            clienteData: clienteData,
-                            found: false
-                        });
-                        console.warn("Endereço não encontrado para gerar pino:", enderecoBusca);
-                    }
-                } catch(e) {
-                    console.error("Erro na busca de geolocalização:", e);
-                    enderecosNaoEncontrados++;
-                    rotasMapeadas.push({ lat: null, lon: null, clienteData: clienteData, found: false });
+      lat: null, lon: null,
+                        clienteData: clienteData,
+                        found: false
+                    });
+                    console.warn("Endereço não encontrado para gerar pino:", enderecoBusca);
                 }
+            } catch(e) {
+                console.error("Erro na busca de geolocalização:", e);
+                enderecosNaoEncontrados++;
+                rotasMapeadas.push({ lat: null, lon: null, clienteData: clienteData, found: false });
             }
-
-            mostrarCarregamento(false);
-            renderizarMapaELegenda(); // Chama a função que desenha os pinos e a legenda
-
-            if (mapMarkersGroup.getLayers().length > 0) {
-                mapInstance.fitBounds(mapMarkersGroup.getBounds(), { padding: [50, 50] });
-            }
-
-            if (enderecosNaoEncontrados > 0) {
-                alert(`Aviso: ${enderecosNaoEncontrados} endereço(s) selecionado(s) não puderam ser localizados com exatidão no mapa. No entanto, eles foram adicionados na legenda e você pode arrastá-los normalmente.`);
-            }
-            */
         }
 
-        let mapInstance = null;
-        let mapMarkersGroup = null;
-        let rotasMapeadas = [];
+        mostrarCarregamento(false);
+        renderizarMapaELegenda(); // Chama a função que desenha os pinos e a legenda
 
-        function renderizarMapaELegenda() {
-            mapMarkersGroup.clearLayers();
-            const barraMarcadores = document.getElementById('barra-marcadores');
-            barraMarcadores.innerHTML = '';
+        if (mapMarkersGroup.getLayers().length > 0) {
+            mapInstance.fitBounds(mapMarkersGroup.getBounds(), { padding: [50, 50] });
+        }
 
-            rotasMapeadas.forEach((rota, index) => {
-                const numero = index + 1;
+        if (enderecosNaoEncontrados > 0) {
+            alert(`Aviso: ${enderecosNaoEncontrados} endereço(s) selecionado(s) não puderam ser localizados com exatidão no mapa. No entanto, eles foram adicionados na legenda e você pode arrastá-los normalmente.`);
+        }
+        */
+    }
 
-                if (rota.found) {
-                    const numIcon = L.divIcon({
-                        className: 'custom-leaflet-icon',
-                        html: `<div class="pin-mapa"><span>${numero}</span></div>`,
-                        iconSize: [34, 34],
-                        iconAnchor: [17, 34], 
-                        popupAnchor: [0, -34] 
-                    });
+    let mapInstance = null;
+    let mapMarkersGroup = null;
+    let rotasMapeadas = [];
+
+    function renderizarMapaELegenda() {
+        if (!mapMarkersGroup) return; // Segurança caso o grupo não exista
+        mapMarkersGroup.clearLayers();
+        const barraMarcadores = document.getElementById('barra-marcadores');
+        barraMarcadores.innerHTML = '';
+
+        rotasMapeadas.forEach((rota, index) => {
+            const numero = index + 1;
+
+            if (rota.found) {
+                const numIcon = L.divIcon({
+                    className: 'custom-leaflet-icon',
+                    html: `<div class="pin-mapa"><span>${numero}</span></div>`,
+                    iconSize: [34, 34],
+                    iconAnchor: [17, 34], 
+                    popupAnchor: [0, -34] 
+                });
                     
                     const marker = L.marker([rota.lat, rota.lon], { icon: numIcon })
                         .bindPopup(`<b>${numero}. ${rota.clienteData.estabelecimento}</b><br>${rota.clienteData.endereco}<br>${rota.clienteData.bairro || ''} - ${rota.clienteData.municipio || ''}`);
