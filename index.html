@@ -470,6 +470,9 @@
         <div id="sec-frota" class="secao">
             <div class="header-action">
                 <div class="header-title">Gerenciar Frota</div>
+                <button class="btn-primary" onclick="abrirModalVeiculo()">
+                    <i class="fas fa-plus"></i> Cadastrar Caminhão
+                </button>
             </div>
             <div class="card">
                 <table id="tabela-frota">
@@ -478,6 +481,7 @@
                             <th>PLACA</th>
                             <th>MODELO/MARCA</th>
                             <th>STATUS ATUAL</th>
+                            <th style="text-align: center;">AÇÕES</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -854,6 +858,45 @@
         </div>
     </div>
 
+    <div id="modal-excluir-veiculo" class="modal-overlay">
+        <div class="modal-container-small">
+            <h3 class="modal-confirm-title" style="color: var(--text-dark);">Excluir Veículo</h3>
+            <p id="texto-exclusao-veiculo" class="modal-confirm-text">
+                Deseja realmente EXCLUIR este veículo da frota? Esta ação apagará o cadastro do sistema.
+            </p>
+            <div class="modal-confirm-actions">
+                <button type="button" class="btn-text-action" style="color: #666;" onclick="fecharModalExcluirVeiculo()">CANCELAR</button>
+                <button type="button" class="btn-text-action" style="color: var(--danger-red);" onclick="executarExclusaoVeiculo()">EXCLUIR</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-veiculo" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>Cadastrar Veículo</h3>
+                <i class="fas fa-times btn-close" onclick="fecharModalVeiculo()"></i>
+            </div>
+            
+            <form id="form-veiculo" onsubmit="salvarVeiculo(event)">
+                <div class="form-group">
+                    <label>Placa do Veículo</label>
+                    <input type="text" id="vei-placa" placeholder="Ex: ABC-1234" required style="text-transform: uppercase;">
+                </div>
+                
+                <div class="form-group">
+                    <label>Modelo / Marca</label>
+                    <input type="text" id="vei-modelo" placeholder="Ex: Volvo FH 540" required>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="fecharModalVeiculo()">Cancelar</button>
+                    <button type="submit" class="btn-primary" id="btn-salvar-vei" style="justify-content: center;">Cadastrar Caminhão</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // CONFIGURAÇÕES SUPABASE
         const SUPABASE_URL = 'https://heupqmwxkpsezzfnqbsb.supabase.co';
@@ -866,11 +909,16 @@
         // Instâncias dos Gráficos e Arrays Locais
         let instGraficoStatus, instGraficoVeiculos, instGraficoTempo;
         let listaClientesLocal = [];
+        
+        // NOVO: Memória (Map) para manter os clientes selecionados mesmo após pesquisar/limpar
+        let clientesSelecionadosMap = new Map();
 
         function formatarDataBR(dataString) {
             if (!dataString) return '--/--/----';
             // Ajuste para evitar erro de timezone mudando o dia
-            const partes = dataString.split('-');
+            // ADICIONADO: Remove a parte da hora (T00:00:00Z) para não bugar a formatação
+            let dataLimpa = typeof dataString === 'string' ? dataString.split('T')[0] : dataString;
+            const partes = dataLimpa.split('-');
             if (partes.length === 3) {
                 return `${partes[2]}/${partes[1]}/${partes[0]}`;
             }
@@ -1159,13 +1207,14 @@
         }
 
         // ==========================================
-        // 3. CARREGAR FROTA
+        // 3. CARREGAR, CADASTRAR E EXCLUIR FROTA
         // ==========================================
         async function carregarFrota() {
             mostrarCarregamento(true);
             const { data } = await _supabase.from('veiculos').select('*, motoristas:motorista_atual_id(nome)').order('placa');
             const tbody = document.querySelector('#tabela-frota tbody');
             
+            // ADICIONADO: Inclusão do botão de deletar veículo na tabela
             tbody.innerHTML = data.map(v => `
                 <tr>
                     <td><b>${v.placa}</b></td>
@@ -1173,9 +1222,81 @@
                     <td class="${v.em_uso ? 'status-em-uso' : 'status-livre'}">
                         ${v.em_uso ? 'EM USO (' + (v.motoristas?.nome || '...') + ')' : 'LIVRE / DISPONÍVEL'}
                     </td>
+                    <td style="text-align: center;">
+                        <i class="fas fa-trash-alt btn-icon-delete" title="Excluir Veículo" onclick="confirmarExclusaoVeiculo('${v.placa}')"></i>
+                    </td>
                 </tr>
             `).join('');
             mostrarCarregamento(false);
+        }
+
+        // ADICIONADO: Funções para o Modal de Novo Veículo
+        function abrirModalVeiculo() {
+            document.getElementById('modal-veiculo').style.display = 'flex';
+        }
+
+        function fecharModalVeiculo() {
+            document.getElementById('modal-veiculo').style.display = 'none';
+            document.getElementById('form-veiculo').reset();
+        }
+
+        async function salvarVeiculo(event) {
+            event.preventDefault();
+            const btnSalvar = document.getElementById('btn-salvar-vei');
+            btnSalvar.innerText = 'Salvando...';
+            btnSalvar.disabled = true;
+
+            const placa = document.getElementById('vei-placa').value.toUpperCase();
+            const modelo = document.getElementById('vei-modelo').value;
+
+            const { error } = await _supabase.from('veiculos').insert([{
+                placa: placa, 
+                modelo: modelo, 
+                em_uso: false 
+            }]);
+
+            btnSalvar.innerText = 'Cadastrar Caminhão';
+            btnSalvar.disabled = false;
+
+            if (error) {
+                alert("Erro ao cadastrar caminhão: " + error.message);
+            } else {
+                fecharModalVeiculo();
+                carregarFrota(); 
+            }
+        }
+
+        // ADICIONADO: Funções de Confirmação e Exclusão de Veículos
+        let veiculoPlacaParaExcluir = null;
+
+        function confirmarExclusaoVeiculo(placa) {
+            veiculoPlacaParaExcluir = placa;
+            document.getElementById('texto-exclusao-veiculo').innerHTML = `Deseja realmente EXCLUIR o veículo de placa <b>${placa}</b> da frota? Esta ação apagará o cadastro do sistema.`;
+            document.getElementById('modal-excluir-veiculo').style.display = 'flex';
+        }
+
+        function fecharModalExcluirVeiculo() {
+            document.getElementById('modal-excluir-veiculo').style.display = 'none';
+            veiculoPlacaParaExcluir = null;
+        }
+
+        async function executarExclusaoVeiculo() {
+            if (!veiculoPlacaParaExcluir) return;
+            
+            mostrarCarregamento(true);
+            
+            const { error } = await _supabase
+                .from('veiculos')
+                .delete()
+                .eq('placa', veiculoPlacaParaExcluir);
+                
+            if (error) {
+                alert("Erro ao excluir veículo: " + error.message);
+                mostrarCarregamento(false);
+            } else {
+                fecharModalExcluirVeiculo();
+                carregarFrota(); // Recarrega a tabela de frota para refletir a mudança
+            }
         }
 
         // ==========================================
@@ -1215,7 +1336,7 @@
             }
 
             tbody.innerHTML = dados.map(cliente => {
-                const cliEdit = JSON.stringify(cliente).replace(/"/g, '&quot;');
+                const cliEdit = JSON.stringify(cliente).replace(/"/g, '"');
 
                 return `
                 <tr>
@@ -1425,7 +1546,7 @@
             }
 
             if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 15px;">Nenhuma motorista cadastrado.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 15px;">Nenhum motorista cadastrado.</td></tr>';
             } else {
                 tbody.innerHTML = data.map(m => `
                     <tr class="linha-selecionavel" onclick="selecionarMotoristaNovaRota('${m.id}', '${m.nome}')">
@@ -1456,6 +1577,23 @@
         // 6. LÓGICA DE SELEÇÃO E CRIAÇÃO DE NOVA ROTA
         // ==========================================
         
+        // ADICIONADO: Função para registrar check individual na "memória"
+        function toggleClienteRota(checkbox) {
+            try {
+                // Recupera os dados convertendo as aspas
+                const valParsed = checkbox.value.replace(/"/g, '"');
+                const clienteObj = JSON.parse(valParsed);
+                
+                if (checkbox.checked) {
+                    clientesSelecionadosMap.set(clienteObj.cnpj, clienteObj);
+                } else {
+                    clientesSelecionadosMap.delete(clienteObj.cnpj);
+                }
+            } catch(e) {
+                console.error("Erro ao registrar cliente na memória", e);
+            }
+        }
+
         function renderizarTabelaMontarRota(dados) {
             const tbody = document.querySelector('#tabela-clientes-montar-rota tbody');
             
@@ -1465,12 +1603,15 @@
             }
 
             tbody.innerHTML = dados.map(cliente => {
-                const cliValue = JSON.stringify(cliente).replace(/"/g, '&quot;');
+                const cliValue = JSON.stringify(cliente).replace(/"/g, '"');
+                
+                // ADICIONADO: Verifica na memória se o cliente já está marcado
+                const isChecked = clientesSelecionadosMap.has(cliente.cnpj) ? 'checked' : '';
 
                 return `
                 <tr>
                     <td style="text-align: center;">
-                        <input type="checkbox" class="checkbox-custom checkbox-cliente-rota" value="${cliValue}">
+                        <input type="checkbox" class="checkbox-custom checkbox-cliente-rota" value="${cliValue}" onchange="toggleClienteRota(this)" ${isChecked}>
                     </td>
                     <td><b>${cliente.estabelecimento || '--'}</b></td>
                     <td>${cliente.cnpj || '--'}</td>
@@ -1504,15 +1645,25 @@
             
             checkboxes.forEach(cb => {
                 cb.checked = masterCheckbox.checked;
+                
+                // ADICIONADO: Salva a seleção global na memória
+                try {
+                    const valParsed = cb.value.replace(/"/g, '"');
+                    const cbData = JSON.parse(valParsed);
+                    if (masterCheckbox.checked) {
+                        clientesSelecionadosMap.set(cbData.cnpj, cbData);
+                    } else {
+                        clientesSelecionadosMap.delete(cbData.cnpj);
+                    }
+                } catch(e) {}
             });
         }
         
         // --- FUNÇÕES DO MAPA GOOGLE ---
         
         async function visualizarRotaGoogle() {
-            const checkboxes = document.querySelectorAll('.checkbox-cliente-rota:checked');
-            
-            if (checkboxes.length === 0) {
+            // SUBSTITUIDO: Lê do Map de memória ao invés de ler só do que está na tela
+            if (clientesSelecionadosMap.size === 0) {
                 alert("Atenção: Você precisa selecionar pelo menos um cliente para visualizar a rota.");
                 return;
             }
@@ -1521,10 +1672,8 @@
 
             let pontosDaRota = [];
 
-            checkboxes.forEach(cb => {
-                const cliente = JSON.parse(cb.value);
-                
-                // Monta o endereço formatado para o Google Maps buscar com precisão
+            // Percorre o Map da memória
+            clientesSelecionadosMap.forEach(cliente => {
                 let enderecoCompleto = `${cliente.endereco || ''}`;
                 if (cliente.numero) enderecoCompleto += `, ${cliente.numero}`;
                 if (cliente.bairro) enderecoCompleto += ` - ${cliente.bairro}`;
@@ -1534,7 +1683,6 @@
             });
 
             // O Google Maps aceita múltiplos destinos na URL separados por barra "/"
-            // CORREÇÃO AQUI: URL oficial de rotas do Google Maps
             const linkGoogleMaps = "https://www.google.com/maps/dir/" + pontosDaRota.join("/");
 
             mostrarCarregamento(false);
@@ -1749,17 +1897,26 @@
 
             if (!placaSelecionadaNovaRota) { alert("Atenção: Você precisa selecionar uma Placa para o veículo desta rota."); return; }
             
-            const checkboxes = document.querySelectorAll('.checkbox-cliente-rota:checked');
-            if (checkboxes.length === 0) { alert("Atenção: Você precisa selecionar pelo menos um cliente para a rota."); return; }
+            // SUBSTITUIDO: Valida e utiliza o array baseado no Map da memória
+            if (clientesSelecionadosMap.size === 0 && (!rotasMapeadas || rotasMapeadas.length === 0)) { 
+                alert("Atenção: Você precisa selecionar pelo menos um cliente para a rota."); 
+                return; 
+            }
             
             mostrarCarregamento(true);
 
             let clientesParaSalvar = [];
             
             if (rotasMapeadas && rotasMapeadas.length > 0) {
-                clientesParaSalvar = rotasMapeadas.map(r => r.clienteData);
+                clientesParaSalvar = rotasMapeadas.map(r => {
+                    let data = JSON.parse(JSON.stringify(r.clienteData));
+                    data.lat = r.lat;
+                    data.lon = r.lon;
+                    return data;
+                });
             } else {
-                clientesParaSalvar = Array.from(checkboxes).map(cb => JSON.parse(cb.value));
+                // ADICIONADO: Pega os valores salvos na memória, ignorando a pesquisa que escondeu itens
+                clientesParaSalvar = Array.from(clientesSelecionadosMap.values());
             }
             
             const listaParaApp = clientesParaSalvar.map(clienteData => {
@@ -1818,7 +1975,9 @@
                 motoristaSelecionadoNovaRotaId = null;
                 motoristaSelecionadoNovaRotaNome = '';
                 document.getElementById('motorista-selecionado-display').style.display = 'none';
+                
                 rotasMapeadas = [];
+                clientesSelecionadosMap.clear(); // ADICIONADO: Limpa a memória após sucesso
                 
                 renderizarTabelaMontarRota(listaClientesLocal);
             }
@@ -2044,6 +2203,11 @@
             
             document.getElementById('cli-cep-edit').addEventListener('input', function(e) {
                  e.target.value = aplicarMascaraCEPParaInput(e.target.value);
+            });
+
+            // ADICIONADO: Deixa a placa digitada automaticamente em maiúscula no novo modal
+            document.getElementById('vei-placa').addEventListener('input', function(e) {
+                 e.target.value = e.target.value.toUpperCase();
             });
             
         });
