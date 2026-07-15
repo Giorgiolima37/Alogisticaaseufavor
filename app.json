@@ -1,0 +1,64 @@
+{
+  "expo": {
+    "name": "Router",
+    "slug": "meu-primeiro-app",
+    "version": "1.1.1",
+    "orientation": "portrait",
+    "icon": "./icone.png",
+    "scheme": "meuprimeiroapp",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0033ff",
+        "foregroundImage": "./icone.png"
+      },
+      "edgeToEdgeEnabled": false,
+      "statusBar": {
+        "barStyle": "light-content",
+        "translucent": false,
+        "backgroundColor": "#0033ff"
+      },
+      "package": "com.mundo.dos3d.entregas",
+      "permissions": [
+        "RECORD_AUDIO"
+      ]
+    },
+    "updates": {
+      "enabled": true,
+      "fallbackToCacheTimeout": 30000,
+      "url": "https://u.expo.dev/35d5c6c4-f06d-4a2e-b12d-7334adc19975"
+    },
+    "runtimeVersion": "1.0.0",
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "backgroundColor": "#ffffff"
+        }
+      ],
+      "expo-updates",
+      [
+        "@react-native-voice/voice",
+        {
+          "microphonePermission": "Permitir usar o microfone para preencher o nome do estabelecimento.",
+          "speechRecognitionPermission": "Permitir reconhecimento de voz para preencher campos automaticamente."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "35d5c6c4-f06d-4a2e-b12d-7334adc19975"
+      }
+    },
+    "owner": "giorgiolima35",
+    "ios": {
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "Este aplicativo utiliza reconhecimento de voz para preencher endereços.",
+        "NSMicrophoneUsageDescription": "Este aplicativo precisa de acesso ao microfone para o reconhecimento de voz."
+      }
+    }
+  }
+}
