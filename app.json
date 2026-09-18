@@ -39,14 +39,7 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-updates",
-      [
-        "@react-native-voice/voice",
-        {
-          "microphonePermission": "Permitir usar o microfone para preencher o nome do estabelecimento.",
-          "speechRecognitionPermission": "Permitir reconhecimento de voz para preencher campos automaticamente."
-        }
-      ]
+      "expo-updates"
     ],
     "extra": {
       "eas": {
