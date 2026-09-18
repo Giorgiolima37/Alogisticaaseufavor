@@ -89,6 +89,11 @@
         .btn-close { cursor: pointer; color: #888; font-size: 1.2rem; transition: 0.2s; }
         .btn-close:hover { color: red; }
         
+        .campo-senha { position: relative; }
+        .campo-senha input { padding-right: 48px !important; }
+        .ver-senha { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border: 0; border-radius: 6px; background: transparent; color: #9bdde5; cursor: pointer; }
+        .ver-senha:hover { background: #7ed3df20; }
+        .ver-senha:focus-visible { outline: 2px solid #9bdde5; }
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 8px; }
         .form-group input { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #CCC; border-radius: 8px; font-size: 0.95rem; background-color: #FAFAFA; }
@@ -314,34 +319,201 @@
                 max-height: 300px !important; /* Reduz a altura para caber melhor na tela */
             }
         }
+        /* Tema Router Deliveries do painel administrativo. */
+        :root {
+            --primary-blue: #88d4df;
+            --accent-blue: #7ed3df;
+            --bg-gray: #0d1722;
+            --text-dark: #e3eef3;
+            --danger-red: #ef827c;
+            --success-green: #70d4b3;
+            --warning-orange: #edbd77;
+            --teal-action: #80d4d8;
+        }
+        body {
+            color: var(--text-dark); color-scheme: dark; min-height: 100vh;
+            background: radial-gradient(ellipse at 65% 0%, #213e4c 0%, #101e2b 42%, #0c1520 85%);
+            background-attachment: fixed;
+        }
+        .sidebar {
+            background: linear-gradient(165deg, #203947, #121f2d 55%, #0d1723);
+            border-right: 1px solid #65899840; box-shadow: 8px 0 35px #0002;
+            padding: 24px 18px; overflow-y: auto;
+        }
+        .sidebar-brand { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding-bottom: 22px; margin-bottom: 20px; border-bottom: 1px solid #65899840; }
+        .sidebar-brand { position: relative; }
+        .sidebar-brand img { width: 180px; height: 180px; object-fit: contain; margin: -18px 0 -14px; filter: drop-shadow(0 0 18px #7ed3df35); }
+        .btn-sair { position: absolute; right: 0; top: 50px; width: 36px; height: 36px; display: grid; place-items: center; background: #203b49; border: 1px solid #648b9d70; border-radius: 10px; color: #9bdde5; cursor: pointer; font-size: 1rem; }
+        .btn-sair:hover { background: #365463; color: #fff; }
+        .btn-sair:focus-visible { outline: 2px solid #9bdde5; outline-offset: 3px; }
+        .sidebar-brand strong { display: block; font-size: 1.1rem; letter-spacing: 2px; color: #edfaff; }
+        .sidebar-brand span { font-size: .65rem; letter-spacing: 3.5px; color: #9ac6d1; }
+        .sidebar h2 { font-size: 1.05rem; color: #edf7fa; margin-top: 0; }
+        .sidebar p { color: #a0b8c6; line-height: 1.5; margin-bottom: 24px; }
+        .menu-item { background: #9bc7d408; border: 1px solid transparent; color: #b7ccd7; border-radius: 10px; padding: 12px; font-size: .88rem; }
+        .menu-item i { color: #82c4d2; width: 20px; text-align: center; }
+        .menu-item:hover { background: #8bdae414; border-color: #8bdae430; color: #f0fbff; }
+        .menu-item.active { background: linear-gradient(110deg, #47738370, #29495880); border-color: #82d2df66; color: #edfcff; box-shadow: inset 3px 0 #8bdbe6; }
+        .menu-item .alerta-oleo { color: #ff5959; margin: 0 0 0 auto; padding-left: 8px; width: auto; font-size: 1.2rem; animation: piscar-alerta-oleo 1.4s ease-in-out infinite; }
+        .menu-item .alerta-oleo[hidden] { display: none; }
+        button.alerta-oleo { background: transparent; border: none; cursor: pointer; padding: 8px; }
+        .menu-item .alerta-oleo i { color: inherit; margin: 0; width: auto; }
+        .atividade-oleo { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; border-bottom: 1px solid #52717f50; }
+        .atividade-oleo p { margin: 6px 0; color: #aec6d2; font-size: .9rem; }
+        #modal-alertas-oleo .modal-container { width: 600px; max-height: 85vh; overflow-y: auto; box-sizing: border-box; }
+        @keyframes piscar-alerta-oleo { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+        @media (prefers-reduced-motion: reduce) { .menu-item .alerta-oleo { animation: none; } }
+        .main-content { padding: 36px; }
+        .header-title { color: #e9f5fa; font-size: 1.8rem; letter-spacing: -.6px; }
+        .header-action { padding-bottom: 22px; border-bottom: 1px solid #65899830; }
+        .card, .chart-box, .modal-container, .modal-container-small, .modal-placas-container {
+            background: linear-gradient(145deg, #203442, #152432);
+            border: 1px solid #648b9d45; border-radius: 18px;
+            box-shadow: 0 12px 30px #0003, inset 0 1px 0 #c0ebf208;
+        }
+        .dashboard-grid { gap: 22px; }
+        .filtro-veiculos { margin-bottom: 12px; }
+        .filtro-veiculos > label { display: block; margin-bottom: 8px; }
+        .filtro-veiculos-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
+        .filtro-veiculos-acoes input { flex: 1; min-width: 140px; }
+        .filtro-veiculos-acoes button { padding: 9px 12px; font-size: .75rem; }
+        .resumo-veiculos { color: #aec6d2; font-size: .8rem; line-height: 1.5; margin: 0 0 18px; }
+        .chart-box { padding: 24px; min-width: 0; }
+        .chart-box-title { color: #dcecf3; font-size: 1rem; font-weight: 600; border-bottom: 1px solid #7695a32e; padding-bottom: 18px; margin-bottom: 22px; line-height: 1.5; }
+        th { color: #a9c7d4; border-bottom-color: #52717f60; }
+        td { color: #d6e5ed; border-bottom-color: #52717f30; }
+        .linha-selecionavel:hover { background: #7ed3df12; }
+        .form-group label, .filtro-label, .detalhes-info-label { color: #aec6d2; }
+        .form-group input, .filtro-input { background: #101e2b; border-color: #425d6c; color: #e3eef3; }
+        .form-group input:focus, .filtro-input:focus { background: #122534; border-color: #8bdbe6; box-shadow: 0 0 0 3px #8bdbe615; }
+        .btn-primary { background: linear-gradient(135deg, #9bddE5, #64b5c5); color: #102b37; border: 1px solid #a2e4eb70; }
+        .btn-primary:hover { background: #a6e5ec; }
+        .btn-secondary { background: #294452; color: #d9edf5; border: 1px solid #719bab40; }
+        .btn-secondary:hover { background: #365766; }
+        .filtro-container { background: #1b2e3c; border: 1px solid #648b9d45; }
+        .modal-overlay { background: #050c16bd; backdrop-filter: blur(5px); }
+        .modal-confirm-title, .detalhes-info-value { color: #e3eef3; }
+        .modal-confirm-text, .entrega-endereco { color: #aec6d2; }
+        .entrega-cnpj, .btn-close, .btn-icon-delete { color: #9cb3c1; }
+        .btn-icon-edit:hover, .btn-icon-delete:hover { color: #d9faff; }
+        .detalhes-info-row, .lista-entregas-detalhe, .lista-entregas-detalhe li { border-color: #52717f50; }
+        #sec-montar-rota thead { background: #203442 !important; }
+        #placa-selecionada-display, #motorista-selecionado-display { background: #234250 !important; }
+        .kpi-blue { background: linear-gradient(135deg, #427588, #264758); }
+        .kpi-green { background: linear-gradient(135deg, #327963, #204c46); }
+        .kpi-orange { background: linear-gradient(135deg, #936c3e, #60482f); }
+        .kpi-red { background: linear-gradient(135deg, #985e5c, #653d45); }
+        @media (max-width: 768px) {
+            .sidebar { border-right: 0; border-bottom: 1px solid #65899840; }
+            .sidebar-brand { justify-content: center; width: 100%; }
+            .menu-item span { display: inline; }
+            .menu-item { font-size: .8rem; }
+            .main-content { padding: 20px; }
+            .header-title { font-size: 1.5rem; }
+            .dashboard-grid { grid-template-columns: minmax(0, 1fr); }
+            .chart-box { padding: 18px; }
+        }
+
+        /* Identidade Router Deliveries na tela de acesso. */
+        body:has(#tela-login:not([style*="display: none"])) { overflow: hidden; }
+        #tela-login {
+            position: fixed; inset: 0; z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            padding: 32px; box-sizing: border-box; overflow-y: auto;
+            background: radial-gradient(ellipse at 28% 42%, #1b424f 0%, #101f2b 38%, #090e17 78%);
+            color: #edf7fa; color-scheme: dark;
+        }
+        .login-shell {
+            display: grid; grid-template-columns: 1.15fr 1fr; width: 1020px; max-width: 100%;
+            margin: auto; border: 1px solid #42636f; border-radius: 28px; overflow: hidden;
+            background: #121e2a;
+            box-shadow: 0 30px 90px #0008, 0 0 60px #67d6e00c, inset 0 1px 0 #b6eaf322;
+        }
+        .login-art {
+            position: relative; min-height: 570px; display: flex; align-items: center;
+            justify-content: center;
+            background: radial-gradient(ellipse at center, #326070 0%, #172e3b 48%, #101823 75%); border-right: 1px solid #6da3b32b;
+        }
+        .login-art img { display: block; width: 88%; height: auto; position: relative; z-index: 1; filter: drop-shadow(0 15px 25px #0005); }
+        .login-art::after {
+            content: ''; position: absolute; inset: 0; pointer-events: none;
+            background: linear-gradient(0deg, #101823 0%, transparent 25%, transparent 75%, #101823 100%);
+        }
+        .login-panel { padding: 58px 44px 40px; background: linear-gradient(145deg, #22374480, #111a27); }
+        .login-eyebrow { display: flex; align-items: center; gap: 9px; color: #88d4df; font-size: .7rem; font-weight: 700; letter-spacing: 2.4px; margin: 0 0 32px; }
+        .login-eyebrow::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #ef827c; box-shadow: 0 0 12px #ef827c55; }
+        .login-heading { margin-bottom: 32px; }
+        .login-heading h2 { margin: 0 0 10px; font-size: 1.8rem; letter-spacing: -.7px; font-weight: 650; }
+        .login-heading p { margin: 0; color: #a4bac7; font-size: .95rem; }
+        #tela-login .form-group { margin-bottom: 22px; }
+        #tela-login .form-group label { color: #ccdde5; font-weight: 500; margin-bottom: 10px; }
+        #tela-login .form-group input {
+            padding: 15px 16px; border: 1px solid #415765; border-radius: 10px;
+            background: #0c1823; color: #effaff; font-family: inherit;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        #tela-login .form-group input::placeholder { color: #8399a8; }
+        #tela-login .form-group input:focus { outline: none; border-color: #8bdeea; box-shadow: 0 0 0 3px #7ed7e21c; }
+        #tela-login input:-webkit-autofill { -webkit-text-fill-color: #effaff; -webkit-box-shadow: 0 0 0 1000px #0c1823 inset; }
+        #tela-login .login-submit {
+            width: 100%; justify-content: center; margin-top: 30px; padding: 16px 12px;
+            border: 1px solid #a2e4eb; border-radius: 10px;
+            background: linear-gradient(135deg, #a0e2e7, #61b7c6); color: #102b37;
+            font-size: .88rem; letter-spacing: .5px; box-shadow: 0 4px 20px #63c8d51a;
+        }
+        #tela-login .login-submit:hover { background: linear-gradient(135deg, #baeff2, #7bcdd8); transform: translateY(-1px); }
+        #tela-login .login-submit:focus-visible { outline: 2px solid #e0fbff; outline-offset: 4px; }
+        .login-footer { margin: 28px 0 0; text-align: center; color: #8aa5b3; font-size: .75rem; }
+        .login-footer i { margin-right: 6px; color: #83c9d4; }
+        @media (max-width: 720px) {
+            #tela-login { padding: 20px; }
+            .login-shell { grid-template-columns: 1fr; max-width: 420px; border-radius: 22px; }
+            .login-art { min-height: 0; height: 210px; border-right: 0; border-bottom: 1px solid #6da3b32b; justify-content: center; }
+            .login-art img { height: 100%; width: 100%; object-fit: contain; }
+            .login-panel { padding: 28px; }
+            .login-eyebrow { margin-bottom: 20px; }
+            .login-heading { margin-bottom: 26px; }
+            .login-heading h2 { font-size: 1.6rem; }
+        }
     </style>
 </head>
 <body>
 
-    <div id="tela-login" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-gray); z-index: 9999; display: flex; align-items: center; justify-content: center;">
-        <div class="card" style="width: 400px; max-width: 90%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
-            <div style="background: var(--primary-blue); padding: 20px; border-radius: 10px; margin-bottom: 25px;">
-                <h2 style="color: white; margin: 0; font-size: 1.5rem;">Gestão da Empresa</h2>
-                <p style="color: #aab6ff; margin: 5px 0 0 0; font-size: 0.9rem;">Acesso Administrativo</p>
+    <div id="tela-login">
+        <div class="login-shell">
+            <div class="login-art">
+                <img src="icone.png" alt="Router Deliveries — rotas e entregas" width="500" height="500">
+            </div>
+            <div class="login-panel">
+            <p class="login-eyebrow">ROUTER DELIVERIES</p>
+            <div class="login-heading">
+                <h2>Gestão da Empresa</h2>
+                <p>Acesso Administrativo</p>
             </div>
             
             <div class="form-group" style="text-align: left;">
-                <label>Usuário</label>
-                <input type="text" id="login-usuario" placeholder="Digite seu usuário">
+                <label for="login-usuario">Usuário</label>
+                <input type="text" id="login-usuario" placeholder="Digite seu usuário" autocomplete="username">
             </div>
             
             <div class="form-group" style="text-align: left;">
-                <label>Senha</label>
-                <input type="password" id="login-senha" placeholder="Digite sua senha">
+                <label for="login-senha">Senha</label>
+                <input type="password" id="login-senha" placeholder="Digite sua senha" autocomplete="current-password">
             </div>
             
-            <button class="btn-primary" onclick="efetuarLogin()" style="width: 100%; justify-content: center; margin-top: 20px; padding: 15px; font-size: 1.1rem;">
+            <button class="btn-primary login-submit" onclick="efetuarLogin()">
                 <i class="fas fa-sign-in-alt"></i> ENTRAR NO SISTEMA
             </button>
+            <p class="login-footer"><i class="fas fa-shield-alt" aria-hidden="true"></i> Painel de acesso administrativo</p>
+            </div>
         </div>
     </div>
 
     <div class="sidebar">
+        <div class="sidebar-brand">
+            <img src="icone.png" alt="Router Deliveries" width="180" height="180">
+            <button type="button" class="btn-sair" onclick="efetuarLogout()" title="Sair e voltar ao login" aria-label="Sair e voltar ao login"><i class="fas fa-sign-out-alt" aria-hidden="true"></i></button>
+        </div>
         <h2>Gestão da Empresa</h2>
         <p>Configurações administrativas e segurança.</p>
         
@@ -352,6 +524,7 @@
         <div class="menu-item" onclick="abrirSecao('motoristas')">
             <i class="fas fa-users"></i>
             <span>Motoristas Cadastrados</span>
+            <button type="button" id="alerta-toxicologico" class="alerta-oleo" hidden onclick="abrirAlertasToxicologico(event)" aria-label="Ver vencimentos de toxicológico"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i></button>
         </div>
         <div class="menu-item" onclick="abrirSecao('rotas')">
             <i class="fas fa-project-diagram"></i>
@@ -360,6 +533,7 @@
         <div class="menu-item" onclick="abrirSecao('frota')">
             <i class="fas fa-truck"></i>
             <span>Gerenciar Frota</span>
+            <button type="button" id="alerta-oleo-frota" class="alerta-oleo" hidden aria-label="Ver trocas de óleo que precisam de atenção" onclick="abrirAlertasOleo(event)"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i></button>
         </div>
         
         <div class="menu-item" onclick="abrirSecao('clientes')">
@@ -399,6 +573,14 @@
                 </div>
                 <div class="chart-box">
                     <div class="chart-box-title">Veículos com Mais Entregas</div>
+                    <div class="filtro-veiculos">
+                        <label for="filtro-data-veiculos" class="filtro-label">Data de saída</label>
+                        <div class="filtro-veiculos-acoes">
+                            <input type="date" id="filtro-data-veiculos" class="filtro-input" onchange="atualizarGraficoVeiculos()">
+                            <button type="button" class="btn-secondary" onclick="limparFiltroVeiculos()">Todas as datas</button>
+                        </div>
+                    </div>
+                    <p id="resumo-veiculos" class="resumo-veiculos" role="status">Carregando entregas...</p>
                     <div class="canvas-container">
                         <canvas id="graficoVeiculos"></canvas>
                     </div>
@@ -431,6 +613,7 @@
                         <tr>
                             <th>NOME / VEÍCULO ATUAL</th>
                             <th>DOCUMENTO</th>
+                            <th>VALIDADE TOXICOLÓGICO</th>
                             <th>IDADE</th>
                             <th>STATUS ACESSO</th>
                             <th style="text-align: center;">AÇÕES</th>
@@ -514,6 +697,9 @@
                             <th>PLACA</th>
                             <th>MODELO/MARCA</th>
                             <th>STATUS ATUAL</th>
+                            <th>ÚLTIMA TROCA DE ÓLEO</th>
+                            <th>PRÓXIMA TROCA DE ÓLEO</th>
+                            <th>INTERVALO DO ÓLEO (KM)</th>
                             <th style="text-align: center;">AÇÕES</th>
                         </tr>
                     </thead>
@@ -618,6 +804,29 @@
             </div>
         </div>
 
+        <div id="sec-gerenciar-senhas" class="secao">
+            <div class="header-action"><div class="header-title">Gerenciar senhas · Usuários administrativos</div></div>
+            <div class="card">
+                <h3 id="admin-form-titulo">Adicionar usuário</h3>
+                <p>Cadastre quem pode acessar este painel. Cada usuário administrativo poderá gerenciar a empresa e cadastrar outros administradores.</p>
+                <form id="form-usuario-admin" onsubmit="cadastrarUsuarioAdmin(event)" style="max-width: 620px;">
+                    <div class="form-group"><label for="admin-nome">Nome completo</label><input id="admin-nome" required minlength="2" maxlength="100" autocomplete="name"></div>
+                    <div class="form-group"><label for="admin-usuario">Nome de usuário para login</label><input id="admin-usuario" required autocomplete="off" placeholder="Ex: Fabiano Gusmão"><small>Pode usar espaços, acentos e símbolos. Espaços no início e no fim são ignorados.</small></div>
+                    <div class="form-group"><label for="admin-senha">Senha</label><div class="campo-senha"><input type="password" id="admin-senha" required minlength="3" maxlength="72" autocomplete="new-password" placeholder="Pelo menos 3 caracteres"><button type="button" class="ver-senha" onclick="alternarVisibilidadeSenha('admin-senha', this)" aria-label="Mostrar senha" aria-controls="admin-senha" aria-pressed="false" title="Mostrar senha"><i class="fas fa-eye" aria-hidden="true"></i></button></div></div>
+                    <div class="form-group"><label for="admin-confirmacao">Confirmar senha</label><div class="campo-senha"><input type="password" id="admin-confirmacao" required minlength="3" maxlength="72" autocomplete="new-password"><button type="button" class="ver-senha" onclick="alternarVisibilidadeSenha('admin-confirmacao', this)" aria-label="Mostrar confirmação de senha" aria-controls="admin-confirmacao" aria-pressed="false" title="Mostrar senha"><i class="fas fa-eye" aria-hidden="true"></i></button></div></div>
+                    <button type="submit" id="btn-adicionar-admin" class="btn-primary"><i class="fas fa-user-plus" aria-hidden="true"></i> Adicionar usuário</button>
+                    <button type="button" id="admin-cancelar-edicao" class="btn-secondary" hidden onclick="cancelarEdicaoAdmin()">Cancelar edição</button>
+                    <p id="admin-dica-senha" hidden>A senha atual não pode ser exibida porque é armazenada como hash. Deixe os campos de senha vazios para mantê-la, ou digite uma nova senha e use o olho para conferi-la.</p>
+                    <p id="admin-mensagem" role="status"></p>
+                </form>
+            </div>
+            <div class="card">
+                <h3>Usuários cadastrados</h3>
+                <p id="admin-lista-status" role="status"></p>
+                <table><thead><tr><th>Nome</th><th>Usuário</th><th>Situação</th><th>Ações</th></tr></thead><tbody id="admin-lista"></tbody></table>
+            </div>
+        </div>
+
         <div id="sec-rotas-prontas" class="secao">
             <div class="header-action">
                 <div class="header-title" style="color: var(--accent-blue);">Rotas Prontas</div>
@@ -648,7 +857,7 @@
     <div id="modal-motorista" class="modal-overlay">
         <div class="modal-container">
             <div class="modal-header">
-                <h3>Adicionar Motorista</h3>
+                <h3 id="titulo-modal-motorista">Adicionar Motorista</h3>
                 <i class="fas fa-times btn-close" onclick="fecharModalMotorista()"></i>
             </div>
             
@@ -820,10 +1029,71 @@
         </div>
     </div>
 
+    <div id="modal-ajuste-toxicologico" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="titulo-ajuste-toxicologico">
+        <div class="modal-container">
+            <h3 id="titulo-ajuste-toxicologico">Ajustar toxicológico</h3>
+            <p id="nome-ajuste-toxicologico"></p>
+            <form onsubmit="salvarAjusteToxicologico(event)">
+                <div class="form-group"><label for="data-ajuste-toxicologico">Nova data de vencimento</label><input type="date" id="data-ajuste-toxicologico" required></div>
+                <p id="erro-ajuste-toxicologico" role="alert" style="color: var(--danger-red);"></p>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="fecharAjusteToxicologico()">Cancelar</button>
+                    <button type="submit" id="salvar-ajuste-toxicologico" class="btn-primary">Salvar vencimento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-alertas-toxicologico" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="titulo-alertas-toxicologico">
+        <div class="modal-container" style="max-height: 80vh; overflow-y: auto; box-sizing: border-box;">
+            <div class="modal-header"><h3 id="titulo-alertas-toxicologico">Atenção ao toxicológico</h3><button type="button" class="btn-secondary" onclick="fecharAlertasToxicologico()" aria-label="Fechar lista">×</button></div>
+            <p>Motoristas ativos com exame vencido ou com vencimento em até um mês.</p>
+            <div id="lista-alertas-toxicologico" aria-live="polite"></div>
+        </div>
+    </div>
+
+    <div id="modal-alertas-oleo" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="titulo-alertas-oleo">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="titulo-alertas-oleo">Atividades que precisam de atenção</h3>
+                <button type="button" class="btn-secondary" onclick="fecharAlertasOleo()" aria-label="Fechar lista">×</button>
+            </div>
+            <p style="color: #aec6d2;">Trocas de óleo vencidas ou previstas para os próximos 7 dias, por ordem de urgência.</p>
+            <div id="lista-alertas-oleo" aria-live="polite"></div>
+        </div>
+    </div>
+
+    <div id="modal-registrar-oleo" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="titulo-registrar-oleo">
+        <div class="modal-container">
+            <h3 id="titulo-registrar-oleo">Registrar troca de óleo</h3>
+            <p id="placa-registrar-oleo"></p>
+            <form onsubmit="salvarTrocaOleo(event)">
+                <div class="form-group">
+                    <label for="oleo-realizada">Troca realizada em</label>
+                    <input type="date" id="oleo-realizada" required onchange="recalcularProximaTroca()">
+                </div>
+                <div class="form-group">
+                    <label for="oleo-intervalo-dias">Intervalo entre trocas (dias)</label>
+                    <input type="number" id="oleo-intervalo-dias" min="1" max="36500" step="1" required oninput="recalcularProximaTroca()">
+                </div>
+                <p style="color: #aec6d2; font-size: .85rem;">O intervalo sugerido usa as datas já cadastradas. Confira antes de salvar. Quilômetros não são convertidos em dias.</p>
+                <div class="form-group">
+                    <label for="oleo-proxima-calculada">Próxima troca calculada</label>
+                    <input type="date" id="oleo-proxima-calculada" readonly required>
+                </div>
+                <p id="oleo-registro-erro" role="alert" style="color: var(--danger-red);"></p>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="fecharRegistroOleo()">Cancelar</button>
+                    <button type="submit" id="btn-registrar-oleo" class="btn-primary">Confirmar troca realizada</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="modal-veiculo" class="modal-overlay">
         <div class="modal-container">
             <div class="modal-header">
-                <h3>Cadastrar Veículo</h3>
+                <h3 id="titulo-modal-veiculo">Cadastrar Veículo</h3>
                 <i class="fas fa-times btn-close" onclick="fecharModalVeiculo()"></i>
             </div>
             
@@ -836,6 +1106,20 @@
                 <div class="form-group">
                     <label>Modelo / Marca</label>
                     <input type="text" id="vei-modelo" placeholder="Ex: Volvo FH 540" required>
+                </div>
+                <div class="form-group">
+                    <label for="vei-ultima-troca-oleo">Data em que foi feita a troca de óleo</label>
+                    <input type="date" id="vei-ultima-troca-oleo">
+                </div>
+                <div class="form-group">
+                    <label for="vei-troca-oleo">Data da próxima troca de óleo</label>
+                    <input type="date" id="vei-troca-oleo">
+                    <small style="display: block; color: #aec6d2; margin-top: 8px;">Opcional. O painel avisa quando faltarem até 7 dias ou a data estiver vencida.</small>
+                </div>
+                <div class="form-group">
+                    <label for="vei-intervalo-oleo">Quantos quilômetros pode rodar com o óleo?</label>
+                    <input type="number" id="vei-intervalo-oleo" min="1" max="2147483647" step="1" placeholder="Ex: 10000">
+                    <small style="display: block; color: #aec6d2; margin-top: 8px;">Intervalo entre trocas, não a quilometragem total do veículo. Os avisos atuais são pela data informada.</small>
                 </div>
 
                 <div class="modal-actions">
@@ -909,7 +1193,167 @@
         
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        const SENHA_ADMIN = '1234'; 
+        let sessaoAdministrativa = null;
+        let loginEmAndamento = false;
+        let cadastroAdminEmAndamento = false;
+
+        async function chamarAdministrativo(acao, parametros = {}) {
+            const { data, error } = await _supabase.rpc('administrativo_acesso', {
+                p_acao: acao, p_token: sessaoAdministrativa?.token || '', ...parametros
+            });
+            if (error) throw new Error('Não foi possível acessar os cadastros administrativos. Verifique a conexão e se o SQL administrativo foi executado.');
+            if (!data?.ok) {
+                if (data?.expirada) efetuarLogout();
+                throw new Error(data?.mensagem || 'Senha incorreta.');
+            }
+            return data;
+        }
+
+        let adminEmEdicao = null;
+        function cancelarEdicaoAdmin() {
+            if (cadastroAdminEmAndamento) return;
+            adminEmEdicao = null;
+            document.getElementById('form-usuario-admin').reset();
+            ocultarSenhasCadastro();
+            document.getElementById('admin-form-titulo').textContent = 'Adicionar usuário';
+            document.getElementById('btn-adicionar-admin').textContent = 'Adicionar usuário';
+            document.getElementById('admin-cancelar-edicao').hidden = true;
+            document.getElementById('admin-dica-senha').hidden = true;
+            document.getElementById('admin-senha').required = true;
+            document.getElementById('admin-confirmacao').required = true;
+            document.getElementById('admin-mensagem').textContent = '';
+        }
+
+        function editarUsuarioAdmin(usuario, focoSenha = false) {
+            if (cadastroAdminEmAndamento) return;
+            cancelarEdicaoAdmin();
+            adminEmEdicao = usuario;
+            document.getElementById('admin-nome').value = usuario.nome;
+            document.getElementById('admin-usuario').value = usuario.usuario;
+            document.getElementById('admin-form-titulo').textContent = 'Editar usuário';
+            document.getElementById('btn-adicionar-admin').textContent = 'Salvar alterações';
+            document.getElementById('admin-cancelar-edicao').hidden = false;
+            document.getElementById('admin-dica-senha').hidden = false;
+            document.getElementById('admin-senha').required = false;
+            document.getElementById('admin-confirmacao').required = false;
+            document.getElementById(focoSenha ? 'admin-senha' : 'admin-nome').focus();
+            document.getElementById('admin-form-titulo').scrollIntoView({ block: 'start' });
+        }
+
+        async function alterarUsuarioAdmin(acao, usuario, campos = {}) {
+            const { data, error } = await _supabase.rpc('administrativo_usuario', {
+                p_token: sessaoAdministrativa?.token || '', p_acao: acao, p_id: usuario.id, ...campos
+            });
+            if (error) throw new Error('Não foi possível alterar o usuário. Verifique a conexão e execute o SQL de edição de usuários.');
+            if (!data?.ok) {
+                if (data?.expirada) efetuarLogout();
+                throw new Error(data?.mensagem || 'Não foi possível alterar o usuário.');
+            }
+            return data;
+        }
+
+        async function excluirUsuarioAdmin(usuario, botao) {
+            if (cadastroAdminEmAndamento) return;
+            if (!confirm(`Excluir o usuário ${usuario.nome} (${usuario.usuario})? Ele perderá o acesso ao painel.`)) return;
+            botao.disabled = true;
+            try {
+                await alterarUsuarioAdmin('excluir', usuario);
+                if (adminEmEdicao?.id === usuario.id) cancelarEdicaoAdmin();
+                await carregarUsuariosAdmin();
+            } catch (error) { document.getElementById('admin-lista-status').textContent = error.message; }
+            finally { botao.disabled = false; }
+        }
+
+        async function carregarUsuariosAdmin() {
+            const status = document.getElementById('admin-lista-status');
+            const lista = document.getElementById('admin-lista');
+            lista.replaceChildren();
+            status.textContent = 'Carregando usuários...';
+            try {
+                const dados = await chamarAdministrativo('listar');
+                if (!sessaoAdministrativa) return;
+                dados.usuarios.forEach(usuario => {
+                    const linha = document.createElement('tr');
+                    [usuario.nome, usuario.usuario, usuario.ativo ? 'Ativo' : 'Bloqueado'].forEach(valor => {
+                        const celula = document.createElement('td');
+                        celula.textContent = valor;
+                        linha.append(celula);
+                    });
+                    const acoes = document.createElement('td');
+                    if (usuario.id) {
+                        const editar = document.createElement('button');
+                        editar.type = 'button'; editar.className = 'btn-secondary'; editar.textContent = 'Editar';
+                        editar.onclick = () => editarUsuarioAdmin(usuario);
+                        const senha = document.createElement('button');
+                        senha.type = 'button'; senha.className = 'btn-secondary'; senha.textContent = 'Redefinir senha';
+                        senha.onclick = () => editarUsuarioAdmin(usuario, true);
+                        const excluir = document.createElement('button');
+                        excluir.type = 'button'; excluir.className = 'btn-secondary'; excluir.textContent = 'Excluir';
+                        excluir.style.color = 'var(--danger-red)';
+                        excluir.onclick = () => excluirUsuarioAdmin(usuario, excluir);
+                        const grupo = document.createElement('div');
+                        grupo.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px';
+                        grupo.append(editar, senha, excluir); acoes.append(grupo);
+                    } else acoes.textContent = 'Execute o SQL atualizado para habilitar as ações.';
+                    linha.append(acoes);
+                    lista.append(linha);
+                });
+                status.textContent = dados.usuarios.length ? '' : 'Nenhum usuário cadastrado.';
+            } catch (error) { status.textContent = error.message; }
+        }
+
+        function alternarVisibilidadeSenha(id, botao) {
+            const campo = document.getElementById(id);
+            const mostrar = campo.type === 'password';
+            campo.type = mostrar ? 'text' : 'password';
+            const rotulo = (mostrar ? 'Ocultar' : 'Mostrar') + (id === 'admin-confirmacao' ? ' confirmação de senha' : ' senha');
+            botao.setAttribute('aria-label', rotulo);
+            botao.setAttribute('aria-pressed', String(mostrar));
+            botao.title = rotulo;
+            botao.querySelector('i').className = mostrar ? 'fas fa-eye-slash' : 'fas fa-eye';
+        }
+
+        function ocultarSenhasCadastro() {
+            document.querySelectorAll('#form-usuario-admin .ver-senha').forEach(botao => {
+                const id = botao.getAttribute('aria-controls');
+                if (document.getElementById(id).type === 'text') alternarVisibilidadeSenha(id, botao);
+            });
+        }
+
+        async function cadastrarUsuarioAdmin(event) {
+            event.preventDefault();
+            if (cadastroAdminEmAndamento || !sessaoAdministrativa) return;
+            const nome = document.getElementById('admin-nome').value.trim();
+            const usuario = document.getElementById('admin-usuario').value.trim().toLowerCase();
+            const senha = document.getElementById('admin-senha').value;
+            const mensagem = document.getElementById('admin-mensagem');
+            if (senha !== document.getElementById('admin-confirmacao').value) { mensagem.textContent = 'As senhas não coincidem.'; return; }
+            if (nome.length < 2 || !usuario || ((!adminEmEdicao || senha !== '') && [...senha].length < 3) || new TextEncoder().encode(senha).length > 72) {
+                mensagem.textContent = 'Confira os campos. A senha deve ter pelo menos 3 caracteres e no máximo 72 bytes.'; return;
+            }
+            cadastroAdminEmAndamento = true;
+            const botao = document.getElementById('btn-adicionar-admin');
+            botao.disabled = true;
+            mensagem.textContent = 'Salvando...';
+            try {
+                const editando = adminEmEdicao;
+                const resultado = editando
+                    ? await alterarUsuarioAdmin('editar', editando, { p_nome: nome, p_usuario: usuario, p_senha: senha })
+                    : await chamarAdministrativo('criar', { p_nome: nome, p_usuario: usuario, p_senha: senha });
+                if (editando && sessaoAdministrativa?.usuario === editando.usuario) {
+                    sessaoAdministrativa.usuario = usuario;
+                    sessaoAdministrativa.nome = nome;
+                }
+                cadastroAdminEmAndamento = false;
+                cancelarEdicaoAdmin();
+                if (resultado.relogin) { efetuarLogout(); alert('Senha atualizada. Entre novamente com a nova senha.'); return; }
+                document.getElementById('form-usuario-admin').reset();
+                ocultarSenhasCadastro();
+                mensagem.textContent = editando ? 'Usuário atualizado com sucesso.' : 'Usuário cadastrado. Ele já pode entrar com o usuário e a senha definidos.';
+                await carregarUsuariosAdmin();
+            } catch (error) { mensagem.textContent = error.message; }
+            finally { cadastroAdminEmAndamento = false; botao.disabled = false; }
+        }
 
         // Instâncias dos Gráficos e Arrays Locais
         let instGraficoStatus, instGraficoVeiculos, instGraficoTempo, instGraficoEntregasHoje;
@@ -940,21 +1384,118 @@
         // ==========================================
         // SISTEMA DE LOGIN
         // ==========================================
-        function efetuarLogin() {
+        function efetuarLogout() {
+            cadastroAdminEmAndamento = false;
+            cancelarEdicaoAdmin();
+            const tokenAnterior = sessaoAdministrativa?.token;
+            sessaoAdministrativa = null;
+            if (tokenAnterior) _supabase.rpc('administrativo_acesso', { p_acao: 'logout', p_token: tokenAnterior }).then(({ error }) => {
+                if (error) console.error('Não foi possível revogar a sessão no servidor.', error);
+            });
+            document.getElementById('form-usuario-admin').reset();
+            ocultarSenhasCadastro();
+            document.getElementById('admin-lista').replaceChildren();
+            document.getElementById('admin-mensagem').textContent = '';
+            document.querySelectorAll('.modal-overlay').forEach(modal => modal.style.display = 'none');
+            document.getElementById('login-usuario').value = '';
+            document.getElementById('login-senha').value = '';
+            document.getElementById('tela-login').style.display = 'flex';
+            document.getElementById('login-usuario').focus();
+        }
+
+        async function efetuarLogin() {
+            if (loginEmAndamento) return;
             const usuario = document.getElementById('login-usuario').value;
             const senha = document.getElementById('login-senha').value;
             
-            // Definindo usuário e senha padrão (Admin / 1234)
-            if (usuario.trim().toLowerCase() === 'admin' && senha === SENHA_ADMIN) {
+            if (!usuario.trim() || !senha) { alert('Informe usuário e senha.'); return; }
+            loginEmAndamento = true;
+            const botao = document.querySelector('.login-submit');
+            botao.disabled = true;
+            try {
+                const dados = await chamarAdministrativo('login', { p_usuario: usuario.trim().toLowerCase(), p_senha: senha });
+                sessaoAdministrativa = { token: dados.token, usuario: dados.usuario, nome: dados.nome };
+                document.getElementById('login-senha').value = '';
                 document.getElementById('tela-login').style.display = 'none';
-            } else {
-                alert('Usuário ou senha incorretos!');
-            }
+                abrirSecao('dashboard');
+                verificarAlertaOleo();
+                verificarAlertaToxicologico();
+            } catch (error) { alert(error.message); }
+            finally { loginEmAndamento = false; botao.disabled = false; }
         }
 
         // ==========================================
         // 1. CARREGAR ENTREGAS LENDO DA "ROTAS_DIARIAS" (COM FILTRO E KPIS)
         // ==========================================
+        let rotasGraficoVeiculos = [];
+
+        function agruparEntregasPorSaida(rotas, filtroData) {
+            const totais = new Map();
+            const usuarios = new Map();
+            rotas.forEach(rota => {
+                if (!Array.isArray(rota.lista_entregas) || !rota.lista_entregas.length) return;
+                let diaSaida = '';
+                if (rota.data_inicio) {
+                    if (/^\d{4}-\d{2}-\d{2}$/.test(rota.data_inicio)) diaSaida = rota.data_inicio;
+                    else {
+                        const data = new Date(rota.data_inicio);
+                        if (!Number.isNaN(data.getTime())) {
+                            diaSaida = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`;
+                        }
+                    }
+                }
+                if (filtroData && diaSaida !== filtroData) return;
+                const placa = rota.veiculo_placa || 'Sem Placa';
+                totais.set(placa, (totais.get(placa) || 0) + rota.lista_entregas.length);
+                if (!usuarios.has(placa)) usuarios.set(placa, new Set());
+                usuarios.get(placa).add(rota.motoristas?.nome?.trim() || 'Não identificado');
+            });
+            return [...totais.entries()]
+                .map(([placa, total]) => [placa, total, [...usuarios.get(placa)].sort((a, b) => a.localeCompare(b, 'pt-BR'))])
+                .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+        }
+
+        function limparFiltroVeiculos() {
+            document.getElementById('filtro-data-veiculos').value = '';
+            atualizarGraficoVeiculos();
+        }
+
+        function atualizarGraficoVeiculos() {
+            const filtroData = document.getElementById('filtro-data-veiculos').value;
+            const ranking = agruparEntregasPorSaida(rotasGraficoVeiculos, filtroData);
+            const periodo = filtroData ? filtroData.split('-').reverse().join('/') : 'Todas as datas';
+            const resumo = document.getElementById('resumo-veiculos');
+            if (ranking.length) {
+                const lideres = ranking.filter(item => item[1] === ranking[0][1]).map(item => item[0]);
+                resumo.textContent = `${periodo} · Maior quantidade: ${lideres.join(', ')} — ${ranking[0][1]} entrega(s).`;
+            } else {
+                resumo.textContent = `${periodo} · Nenhuma entrega encontrada para esta data de saída.`;
+            }
+            if (instGraficoVeiculos) instGraficoVeiculos.destroy();
+            instGraficoVeiculos = new Chart(document.getElementById('graficoVeiculos').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ranking.map(item => item[0]),
+                    datasets: [{ label: 'Entregas na saída', data: ranking.map(item => item[1]), backgroundColor: '#7ed3df', borderRadius: 6 }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: function(context) {
+                                    const nomes = ranking[context.dataIndex][2];
+                                    return nomes.map(nome => `Usuário: ${nome}`);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
         async function carregarRotas() {
             mostrarCarregamento(true);
             
@@ -971,7 +1512,13 @@
                 `)
                 .order('data_inicio', { ascending: false });
 
-            if (error) { console.error("Erro ao buscar rotas diárias:", error); return; }
+            if (error) {
+                console.error("Erro ao buscar rotas diárias:", error);
+                document.getElementById('resumo-veiculos').textContent = 'Não foi possível atualizar as entregas. Abra o Dashboard novamente para tentar.';
+                mostrarCarregamento(false);
+                return;
+            }
+            rotasGraficoVeiculos = data || [];
 
             const tbody = document.querySelector('#tabela-rotas tbody');
             let htmlRows = '';
@@ -1080,6 +1627,16 @@
 
         // ADICIONADO: Adaptação na função para receber o dicionário motoristasHojeDict
         function desenharGraficos(sucesso, avaria, falha, veiculosDict, tempoDict, dataHojeBD, motoristasHojeDict = {}) {
+            Chart.defaults.color = '#b7cdd8';
+            Chart.defaults.borderColor = 'rgba(139, 178, 195, 0.15)';
+            Chart.defaults.font.family = "'Segoe UI', Tahoma, sans-serif";
+            Chart.defaults.plugins.legend.labels.usePointStyle = true;
+            Chart.defaults.plugins.legend.labels.padding = 18;
+            Chart.defaults.plugins.tooltip.backgroundColor = '#0c1925';
+            Chart.defaults.plugins.tooltip.titleColor = '#edfaff';
+            Chart.defaults.plugins.tooltip.bodyColor = '#c7dfe9';
+            Chart.defaults.plugins.tooltip.borderColor = '#4c7585';
+            Chart.defaults.plugins.tooltip.borderWidth = 1;
             
             const ctxStatus = document.getElementById('graficoStatus').getContext('2d');
             if (instGraficoStatus) instGraficoStatus.destroy();
@@ -1089,7 +1646,8 @@
                     labels: ['Sucesso', 'Com Avaria', 'Não Realizadas'],
                     datasets: [{
                         data: [sucesso, avaria, falha],
-                        backgroundColor: ['#28a745', '#ff8c00', '#d32f2f'],
+                        backgroundColor: ['#70d4b3', '#edbd77', '#ef827c'],
+                        borderColor: '#1b2e3c',
                         borderWidth: 2,
                         hoverOffset: 4
                     }]
@@ -1097,23 +1655,7 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
             });
 
-            const labelsVeiculos = Object.keys(veiculosDict);
-            const dadosVeiculos = Object.values(veiculosDict);
-            const ctxVeiculos = document.getElementById('graficoVeiculos').getContext('2d');
-            if (instGraficoVeiculos) instGraficoVeiculos.destroy();
-            instGraficoVeiculos = new Chart(ctxVeiculos, {
-                type: 'bar',
-                data: {
-                    labels: labelsVeiculos,
-                    datasets: [{
-                        label: 'Qtd. de Entregas',
-                        data: dadosVeiculos,
-                        backgroundColor: '#0033ff',
-                        borderRadius: 6
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
-            });
+            atualizarGraficoVeiculos();
 
             // ADICIONADO: Ajuste do gráfico para exibir a porcentagem de conclusão por Usuário (Motorista)
             document.getElementById('tituloGraficoHoje').innerText = `Progresso das Entregas (${formatarDataBR(dataHojeBD)})`;
@@ -1143,7 +1685,7 @@
                     datasets: [{
                         label: 'Progresso Concluído (%)',
                         data: dadosProgresso, // Porcentagem do motorista
-                        backgroundColor: '#009688', // Teal para indicar progresso
+                        backgroundColor: '#70c9c3', // Teal para indicar progresso
                         borderRadius: 6
                     }]
                 },
@@ -1183,7 +1725,7 @@
                     datasets: [{
                         label: 'Minutos totais em atendimento',
                         data: dadosTempo,
-                        backgroundColor: '#16319e',
+                        backgroundColor: '#77a9c6',
                         borderRadius: 6
                     }]
                 },
@@ -1194,9 +1736,137 @@
         // ==========================================
         // 2. CARREGAR MOTORISTAS
         // ==========================================
+        function prazoToxicologico(valor, hoje = new Date()) {
+            if (!valor) return null;
+            let partes = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(valor);
+            let ano, mes, dia;
+            if (partes) [, dia, mes, ano] = partes.map(Number);
+            else {
+                partes = /^(\d{4})-(\d{2})-(\d{2})(?:T.*)?$/.exec(valor);
+                if (!partes) return null;
+                [, ano, mes, dia] = partes.map(Number);
+            }
+            const vencimento = new Date(Date.UTC(ano, mes - 1, dia));
+            if (vencimento.getUTCFullYear() !== ano || vencimento.getUTCMonth() !== mes - 1 || vencimento.getUTCDate() !== dia) return null;
+            const inicio = Date.UTC(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+            const ultimoDia = new Date(Date.UTC(hoje.getFullYear(), hoje.getMonth() + 2, 0)).getUTCDate();
+            const limite = Date.UTC(hoje.getFullYear(), hoje.getMonth() + 1, Math.min(hoje.getDate(), ultimoDia));
+            return { dias: Math.round((vencimento.getTime() - inicio) / 86400000), alerta: vencimento.getTime() <= limite, data: `${String(dia).padStart(2, '0')}/${String(mes).padStart(2, '0')}/${ano}` };
+        }
+
+        function exibirAlertaToxicologico(motoristas) {
+            const pendencias = motoristas.filter(m => m.ativo === true).map(m => ({ ...m, prazo: prazoToxicologico(m.toxicologico) }))
+                .filter(m => m.prazo?.alerta).sort((a, b) => a.prazo.dias - b.prazo.dias);
+            const aviso = document.getElementById('alerta-toxicologico');
+            aviso.hidden = pendencias.length === 0;
+            aviso.title = `${pendencias.length} motorista(s) com toxicológico vencido ou próximo do vencimento`;
+            aviso.setAttribute('aria-label', aviso.title);
+            const lista = document.getElementById('lista-alertas-toxicologico');
+            lista.replaceChildren();
+            if (!pendencias.length) lista.textContent = 'Nenhum vencimento requer atenção neste momento.';
+            pendencias.forEach(m => {
+                const item = document.createElement('div'); item.className = 'atividade-oleo';
+                const detalhes = document.createElement('div');
+                const nome = document.createElement('strong'); nome.textContent = m.nome;
+                const prazo = document.createElement('p');
+                prazo.textContent = `${m.prazo.data} · ${m.prazo.dias < 0 ? 'Vencido' : m.prazo.dias === 0 ? 'Vence hoje' : 'Vence em ' + m.prazo.dias + ' dia(s)'}`;
+                prazo.style.color = m.prazo.dias < 0 ? 'var(--danger-red)' : 'var(--warning-orange)';
+                const ajustar = document.createElement('button');
+                ajustar.type = 'button'; ajustar.className = 'btn-secondary';
+                ajustar.textContent = 'Ajustar toxicológico';
+                ajustar.onclick = () => abrirAjusteToxicologico(m);
+                item.style.flexWrap = 'wrap';
+                detalhes.append(nome, prazo); item.append(detalhes, ajustar); lista.append(item);
+            });
+        }
+
+        async function verificarAlertaToxicologico() {
+            if (!sessaoAdministrativa) return;
+            try {
+                const { data, error } = await _supabase.from('motoristas').select('id, nome, ativo, toxicologico');
+                if (error) throw error;
+                exibirAlertaToxicologico(data || []);
+            } catch (error) {
+                document.getElementById('lista-alertas-toxicologico').textContent = 'Não foi possível consultar os vencimentos. Feche e abra a lista para tentar novamente.';
+                console.error('Erro ao verificar toxicológicos:', error);
+            }
+        }
+
+        function abrirAlertasToxicologico(event) {
+            event.stopPropagation();
+            document.getElementById('modal-alertas-toxicologico').style.display = 'flex';
+            document.getElementById('lista-alertas-toxicologico').textContent = 'Consultando vencimentos...';
+            document.querySelector('#modal-alertas-toxicologico button').focus();
+            verificarAlertaToxicologico();
+        }
+
+        let motoristaAjusteToxicologico = null;
+        let salvandoAjusteToxicologico = false;
+
+        function abrirAjusteToxicologico(motorista) {
+            if (salvandoAjusteToxicologico) return;
+            motoristaAjusteToxicologico = motorista.id;
+            document.getElementById('nome-ajuste-toxicologico').textContent = motorista.nome;
+            const prazo = prazoToxicologico(motorista.toxicologico);
+            document.getElementById('data-ajuste-toxicologico').value = prazo ? prazo.data.split('/').reverse().join('-') : '';
+            document.getElementById('erro-ajuste-toxicologico').textContent = '';
+            document.getElementById('modal-alertas-toxicologico').style.display = 'none';
+            document.getElementById('modal-ajuste-toxicologico').style.display = 'flex';
+            document.getElementById('data-ajuste-toxicologico').focus();
+        }
+
+        function fecharAjusteToxicologico() {
+            if (salvandoAjusteToxicologico) return;
+            motoristaAjusteToxicologico = null;
+            document.getElementById('modal-ajuste-toxicologico').style.display = 'none';
+            document.getElementById('modal-alertas-toxicologico').style.display = 'flex';
+            document.querySelector('#modal-alertas-toxicologico button').focus();
+        }
+
+        async function salvarAjusteToxicologico(event) {
+            event.preventDefault();
+            if (salvandoAjusteToxicologico || !motoristaAjusteToxicologico) return;
+            const prazo = prazoToxicologico(document.getElementById('data-ajuste-toxicologico').value);
+            const mensagem = document.getElementById('erro-ajuste-toxicologico');
+            if (!prazo) { mensagem.textContent = 'Informe uma data válida.'; return; }
+            salvandoAjusteToxicologico = true;
+            const botao = document.getElementById('salvar-ajuste-toxicologico');
+            botao.disabled = true;
+            botao.textContent = 'Salvando...';
+            mensagem.textContent = '';
+            let sucesso = false;
+            try {
+                const { data, error } = await _supabase.from('motoristas')
+                    .update({ toxicologico: prazo.data }).eq('id', motoristaAjusteToxicologico).select('id').single();
+                if (error) throw error;
+                if (!data) throw new Error('Motorista não encontrado.');
+                sucesso = true;
+            } catch (error) { mensagem.textContent = 'Não foi possível salvar: ' + error.message; }
+            finally {
+                salvandoAjusteToxicologico = false;
+                botao.disabled = false;
+                botao.textContent = 'Salvar vencimento';
+            }
+            if (sucesso) {
+                fecharAjusteToxicologico();
+                await verificarAlertaToxicologico();
+            }
+        }
+
+        function fecharAlertasToxicologico() {
+            document.getElementById('modal-alertas-toxicologico').style.display = 'none';
+            document.getElementById('alerta-toxicologico').focus();
+        }
+
+        let motoristasEdicao = [];
+        let motoristaEdicaoId = null;
+        let salvandoMotorista = false;
         async function carregarMotoristas() {
             mostrarCarregamento(true);
-            const { data } = await _supabase.from('motoristas').select('*, veiculos(placa)').order('nome');
+            const { data, error } = await _supabase.from('motoristas').select('*, veiculos(placa)').order('nome');
+            if (error) { mostrarCarregamento(false); alert('Não foi possível carregar os motoristas.'); return; }
+            exibirAlertaToxicologico(data || []);
+            motoristasEdicao = data || [];
             const tbody = document.querySelector('#tabela-motoristas tbody');
             
             tbody.innerHTML = data.map(m => {
@@ -1208,14 +1878,18 @@
                 
                 const btnDeletar = `<i class="fas fa-trash-alt btn-icon-delete" title="Excluir Definitivamente" onclick="confirmarExclusao('${m.id}', '${m.nome}')"></i>`;
 
+                const vencimento = prazoToxicologico(m.toxicologico);
+                const validade = vencimento ? `<span style="color: ${vencimento.dias < 0 ? 'var(--danger-red)' : vencimento.alerta ? 'var(--warning-orange)' : 'var(--text-dark)'}">${vencimento.data}${vencimento.alerta ? '<br><small>' + (vencimento.dias < 0 ? 'Vencido' : vencimento.dias === 0 ? 'Vence hoje' : 'Vence em ' + vencimento.dias + ' dia(s)') + '</small>' : ''}</span>` : 'Não informada';
                 return `
                 <tr>
                     <td><b>${m.nome}</b>${placaVinculada}</td>
                     <td>${m.documento || '--'}</td>
+                    <td>${validade}</td>
                     <td>${m.idade || '--'}</td>
                     <td class="${m.ativo ? '' : 'status-desligado'}">${m.ativo ? 'Ativo' : 'DESLIGADO'}</td>
                     <td style="text-align: center;">
                         <div style="display: flex; justify-content: center; gap: 15px;">
+                            <button type="button" class="btn-icon-edit" style="background: none; border: none;" title="Editar motorista" aria-label="Editar motorista" onclick="abrirModalMotorista('${m.id}')"><i class="fas fa-pen" aria-hidden="true"></i></button>
                             ${btnStatus}
                             ${btnDeletar}
                         </div>
@@ -1225,11 +1899,38 @@
             mostrarCarregamento(false);
         }
 
-        function abrirModalMotorista() { document.getElementById('modal-motorista').style.display = 'flex'; }
-        function fecharModalMotorista() { document.getElementById('modal-motorista').style.display = 'none'; document.getElementById('form-motorista').reset(); }
+        function abrirModalMotorista(id = null) {
+            if (salvandoMotorista) return;
+            const motorista = id ? motoristasEdicao.find(m => m.id === id) : null;
+            if (id && !motorista) return;
+            motoristaEdicaoId = id;
+            document.getElementById('form-motorista').reset();
+            document.getElementById('titulo-modal-motorista').textContent = id ? 'Editar Motorista' : 'Adicionar Motorista';
+            document.getElementById('mot-senha').required = !id;
+            document.getElementById('mot-senha').placeholder = id ? 'Deixe vazio para manter a senha' : 'Apenas números';
+            if (motorista) {
+                document.getElementById('mot-nome').value = motorista.nome || '';
+                document.getElementById('mot-idade').value = motorista.idade ?? '';
+                document.getElementById('mot-documento').value = motorista.documento || '';
+                document.getElementById('mot-toxicologico').value = prazoToxicologico(motorista.toxicologico)?.data || '';
+            }
+            document.getElementById('modal-motorista').style.display = 'flex';
+            document.getElementById('mot-nome').focus();
+        }
+        function fecharModalMotorista() {
+            if (salvandoMotorista) return;
+            motoristaEdicaoId = null;
+            document.getElementById('modal-motorista').style.display = 'none';
+            document.getElementById('form-motorista').reset();
+        }
 
         async function salvarMotorista(event) {
             event.preventDefault(); 
+            if (salvandoMotorista) return;
+            const dataInformada = document.getElementById('mot-toxicologico').value.trim();
+            if (dataInformada && !prazoToxicologico(dataInformada)) { alert('Informe uma data válida para o toxicológico.'); return; }
+            if (!document.getElementById('mot-nome').value.trim() || !document.getElementById('mot-documento').value.trim()) { alert('Preencha nome e documento.'); return; }
+            salvandoMotorista = true;
             const btnSalvar = document.getElementById('btn-salvar-mot');
             btnSalvar.innerText = 'Salvando...'; btnSalvar.disabled = true;
 
@@ -1239,14 +1940,20 @@
             const toxicologico = document.getElementById('mot-toxicologico').value;
             const senha = document.getElementById('mot-senha').value;
 
-            const { error } = await _supabase.from('motoristas').insert([{
-                nome: nome, idade: idade ? parseInt(idade) : null, documento: documento, toxicologico: toxicologico, senha: senha, ativo: true 
-            }]);
-
-            btnSalvar.innerText = 'Salvar Motorista'; btnSalvar.disabled = false;
-
-            if (error) alert("Erro ao salvar: " + error.message);
-            else { fecharModalMotorista(); carregarMotoristas(); }
+            const dados = { nome: nome.trim(), idade: idade ? parseInt(idade) : null, documento: documento.trim(), toxicologico: toxicologico.trim() };
+            if (senha || !motoristaEdicaoId) dados.senha = senha;
+            let sucesso = false;
+            try {
+                const consulta = motoristaEdicaoId
+                    ? _supabase.from('motoristas').update(dados).eq('id', motoristaEdicaoId)
+                    : _supabase.from('motoristas').insert([{ ...dados, ativo: true }]);
+                const { data, error } = await consulta.select('id').single();
+                if (error) throw error;
+                if (!data) throw new Error('Nenhum motorista foi salvo.');
+                sucesso = true;
+            } catch (error) { alert('Erro ao salvar: ' + error.message); }
+            finally { salvandoMotorista = false; btnSalvar.innerText = 'Salvar Motorista'; btnSalvar.disabled = false; }
+            if (sucesso) { fecharModalMotorista(); await carregarMotoristas(); }
         }
 
         let motoristaIdParaDesligar = null;
@@ -1277,7 +1984,8 @@
             event.preventDefault(); 
             if(!motoristaIdParaReativar) return;
             const senhaDigitada = document.getElementById('input-senha-reativar').value;
-            if(senhaDigitada !== SENHA_ADMIN) { alert('Senha incorreta.'); return; }
+            try { await chamarAdministrativo('verificar_senha', { p_senha: senhaDigitada }); }
+            catch (error) { alert(error.message); return; }
             mostrarCarregamento(true);
             const { error } = await _supabase.from('motoristas').update({ ativo: true }).eq('id', motoristaIdParaReativar);
             if(error) { alert("Erro: " + error.message); mostrarCarregamento(false); }
@@ -1303,9 +2011,188 @@
         // ==========================================
         // 3. CARREGAR, CADASTRAR E EXCLUIR FROTA
         // ==========================================
+        let frotaLocal = [];
+        let veiculosAlertaOleo = [];
+        function renderizarAlertasOleo() {
+            const lista = document.getElementById('lista-alertas-oleo');
+            lista.replaceChildren();
+            if (!veiculosAlertaOleo.length) {
+                lista.textContent = 'Nenhuma troca de óleo precisa de atenção neste momento.';
+                return;
+            }
+            veiculosAlertaOleo.forEach(veiculo => {
+                const item = document.createElement('div');
+                item.className = 'atividade-oleo';
+                const detalhes = document.createElement('div');
+                const titulo = document.createElement('strong');
+                titulo.textContent = veiculo.placa + ' · ' + (veiculo.modelo || 'Modelo não informado');
+                const atividade = document.createElement('p');
+                atividade.textContent = 'Troca de óleo';
+                const prazo = document.createElement('div');
+                prazo.innerHTML = apresentarTrocaOleo(veiculo.proxima_troca_oleo);
+                detalhes.append(titulo, atividade, prazo);
+                const editar = document.createElement('button');
+                editar.type = 'button';
+                editar.className = 'btn-secondary';
+                editar.textContent = 'Editar';
+                editar.setAttribute('aria-label', 'Editar veículo ' + veiculo.placa);
+                editar.onclick = () => {
+                    const indice = frotaLocal.findIndex(v => v.id === veiculo.id);
+                    if (indice < 0) frotaLocal.push(veiculo);
+                    else frotaLocal[indice] = veiculo;
+                    fecharAlertasOleo();
+                    abrirModalVeiculo(veiculo.id);
+                };
+                const registrar = document.createElement('button');
+                registrar.type = 'button';
+                registrar.className = 'btn-primary';
+                registrar.textContent = 'Registrar troca';
+                registrar.onclick = () => abrirRegistroOleo(veiculo);
+                const acoes = document.createElement('div');
+                acoes.style.cssText = 'display: flex; flex-wrap: wrap; gap: 8px;';
+                acoes.append(registrar, editar);
+                item.style.flexWrap = 'wrap';
+                item.append(detalhes, acoes);
+                lista.append(item);
+            });
+        }
+
+        let veiculoRegistroOleo = null;
+        let registrandoOleo = false;
+
+        function calcularProximaTroca(data, dias) {
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(data) || !Number.isInteger(dias) || dias < 1 || dias > 36500) return '';
+            const instante = new Date(data + 'T00:00:00Z');
+            if (Number.isNaN(instante.getTime())) return '';
+            instante.setUTCDate(instante.getUTCDate() + dias);
+            return instante.toISOString().slice(0, 10);
+        }
+
+        function recalcularProximaTroca() {
+            document.getElementById('oleo-proxima-calculada').value = calcularProximaTroca(
+                document.getElementById('oleo-realizada').value,
+                Number(document.getElementById('oleo-intervalo-dias').value)
+            );
+        }
+
+        function abrirRegistroOleo(veiculo) {
+            veiculoRegistroOleo = veiculo;
+            const hoje = new Date();
+            const dataHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
+            document.getElementById('placa-registrar-oleo').textContent = veiculo.placa;
+            document.getElementById('oleo-realizada').value = dataHoje;
+            document.getElementById('oleo-realizada').max = dataHoje;
+            const intervalo = (new Date(veiculo.proxima_troca_oleo + 'T00:00:00Z') - new Date(veiculo.ultima_troca_oleo + 'T00:00:00Z')) / 86400000;
+            document.getElementById('oleo-intervalo-dias').value = Number.isInteger(intervalo) && intervalo > 0 && intervalo <= 36500 ? intervalo : '';
+            document.getElementById('oleo-registro-erro').textContent = '';
+            recalcularProximaTroca();
+            document.getElementById('modal-alertas-oleo').style.display = 'none';
+            document.getElementById('modal-registrar-oleo').style.display = 'flex';
+            document.getElementById('oleo-realizada').focus();
+        }
+
+        function fecharRegistroOleo() {
+            if (registrandoOleo) return;
+            document.getElementById('modal-registrar-oleo').style.display = 'none';
+            document.getElementById('modal-alertas-oleo').style.display = 'flex';
+            veiculoRegistroOleo = null;
+            document.querySelector('#modal-alertas-oleo button').focus();
+        }
+
+        async function salvarTrocaOleo(event) {
+            event.preventDefault();
+            if (registrandoOleo || !veiculoRegistroOleo) return;
+            const ultima = document.getElementById('oleo-realizada').value;
+            const proxima = calcularProximaTroca(ultima, Number(document.getElementById('oleo-intervalo-dias').value));
+            if (!proxima || ultima > document.getElementById('oleo-realizada').max) {
+                document.getElementById('oleo-registro-erro').textContent = 'Confira a data realizada e o intervalo em dias.';
+                return;
+            }
+            registrandoOleo = true;
+            const botao = document.getElementById('btn-registrar-oleo');
+            botao.disabled = true;
+            botao.textContent = 'Salvando...';
+            let sucesso = false;
+            try {
+                const { data, error } = await _supabase.from('veiculos')
+                    .update({ ultima_troca_oleo: ultima, proxima_troca_oleo: proxima })
+                    .eq('id', veiculoRegistroOleo.id).select('id').single();
+                if (error) throw error;
+                if (!data) throw new Error('Veículo não atualizado.');
+                sucesso = true;
+            } catch (error) {
+                document.getElementById('oleo-registro-erro').textContent = 'Não foi possível registrar: ' + error.message;
+            } finally {
+                registrandoOleo = false;
+                botao.disabled = false;
+                botao.textContent = 'Confirmar troca realizada';
+            }
+            if (sucesso) {
+                fecharRegistroOleo();
+                await carregarFrota();
+            }
+        }
+
+        async function abrirAlertasOleo(event) {
+            event.stopPropagation();
+            document.getElementById('modal-alertas-oleo').style.display = 'flex';
+            document.getElementById('lista-alertas-oleo').textContent = 'Atualizando atividades...';
+            document.querySelector('#modal-alertas-oleo button').focus();
+            await verificarAlertaOleo();
+        }
+
+        function fecharAlertasOleo() {
+            document.getElementById('modal-alertas-oleo').style.display = 'none';
+            document.getElementById('alerta-oleo-frota').focus();
+        }
+        function trocaOleoRequerAtencao(data, hoje = new Date()) {
+            if (!data || !/^\d{4}-\d{2}-\d{2}$/.test(data)) return false;
+            const [ano, mes, dia] = data.split('-').map(Number);
+            const dias = (Date.UTC(ano, mes - 1, dia) - Date.UTC(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())) / 86400000;
+            return dias <= 7;
+        }
+
+        function exibirAlertaOleo(veiculos) {
+            veiculosAlertaOleo = veiculos.filter(v => trocaOleoRequerAtencao(v.proxima_troca_oleo))
+                .sort((a, b) => a.proxima_troca_oleo.localeCompare(b.proxima_troca_oleo));
+            const quantidade = veiculosAlertaOleo.length;
+            renderizarAlertasOleo();
+            const aviso = document.getElementById('alerta-oleo-frota');
+            const descricao = `${quantidade} veículo(s) com troca de óleo vencida ou prevista para os próximos 7 dias`;
+            aviso.hidden = quantidade === 0;
+            aviso.title = descricao;
+            aviso.setAttribute('aria-label', descricao);
+        }
+
+        async function verificarAlertaOleo() {
+            if (!sessaoAdministrativa) return;
+            try {
+                const { data, error } = await _supabase.from('veiculos').select('id, placa, modelo, ultima_troca_oleo, proxima_troca_oleo, intervalo_troca_oleo_km');
+                if (error) throw error;
+                exibirAlertaOleo(data || []);
+            } catch (error) {
+                console.error('Não foi possível verificar as trocas de óleo:', error);
+                document.getElementById('lista-alertas-oleo').textContent = 'Não foi possível atualizar a lista. Feche e abra o alerta para tentar novamente.';
+            }
+        }
+        let veiculoIdEdicao = null;
+        let salvandoVeiculo = false;
+        function apresentarTrocaOleo(data, hoje = new Date()) {
+            if (!data || !/^\d{4}-\d{2}-\d{2}$/.test(data)) return 'Não informada';
+            const [ano, mes, dia] = data.split('-').map(Number);
+            const dias = Math.round((Date.UTC(ano, mes - 1, dia) - Date.UTC(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())) / 86400000);
+            const formatada = data.split('-').reverse().join('/');
+            const texto = dias < 0 ? 'Vencida' : dias === 0 ? 'Hoje' : dias <= 7 ? `Em ${dias} dia(s)` : 'Agendada';
+            const cor = dias < 0 ? 'var(--danger-red)' : dias <= 7 ? 'var(--warning-orange)' : 'var(--text-dark)';
+            return `<span style="color: ${cor};">${formatada}<br><small>${texto}</small></span>`;
+        }
+
         async function carregarFrota() {
             mostrarCarregamento(true);
-            const { data } = await _supabase.from('veiculos').select('*, motoristas:motorista_atual_id(nome)').order('placa');
+            const { data, error } = await _supabase.from('veiculos').select('*, motoristas:motorista_atual_id(nome)').order('placa');
+            if (error) { mostrarCarregamento(false); alert('Erro ao carregar veículos: ' + error.message); return; }
+            frotaLocal = data || [];
+            exibirAlertaOleo(frotaLocal);
             const tbody = document.querySelector('#tabela-frota tbody');
             
             // ADICIONADO: Inclusão do botão de deletar veículo na tabela
@@ -1316,7 +2203,11 @@
                     <td class="${v.em_uso ? 'status-em-uso' : 'status-livre'}">
                         ${v.em_uso ? 'EM USO (' + (v.motoristas?.nome || '...') + ')' : 'LIVRE / DISPONÍVEL'}
                     </td>
+                    <td>${v.ultima_troca_oleo && /^\d{4}-\d{2}-\d{2}$/.test(v.ultima_troca_oleo) ? v.ultima_troca_oleo.split('-').reverse().join('/') : 'Não informada'}</td>
+                    <td>${apresentarTrocaOleo(v.proxima_troca_oleo)}</td>
+                    <td>${Number.isInteger(v.intervalo_troca_oleo_km) && v.intervalo_troca_oleo_km > 0 ? v.intervalo_troca_oleo_km.toLocaleString('pt-BR') + ' km' : 'Não informado'}</td>
                     <td style="text-align: center;">
+                        <button type="button" class="btn-icon-edit" style="background: none; border: none; margin-right: 12px;" title="Editar veículo" aria-label="Editar veículo" onclick="abrirModalVeiculo('${v.id}')"><i class="fas fa-pen" aria-hidden="true"></i></button>
                         <i class="fas fa-trash-alt btn-icon-delete" title="Excluir Veículo" onclick="confirmarExclusaoVeiculo('${v.placa}')"></i>
                     </td>
                 </tr>
@@ -1325,36 +2216,70 @@
         }
 
         // ADICIONADO: Funções para o Modal de Novo Veículo
-        function abrirModalVeiculo() {
+        function abrirModalVeiculo(id = null) {
+            if (salvandoVeiculo) return;
+            const veiculo = id ? frotaLocal.find(v => v.id === id) : null;
+            if (id && !veiculo) return;
+            veiculoIdEdicao = id;
+            document.getElementById('form-veiculo').reset();
+            document.getElementById('titulo-modal-veiculo').textContent = id ? 'Editar Veículo' : 'Cadastrar Veículo';
+            document.getElementById('btn-salvar-vei').textContent = id ? 'Salvar alterações' : 'Cadastrar Caminhão';
+            if (veiculo) {
+                document.getElementById('vei-placa').value = veiculo.placa;
+                document.getElementById('vei-modelo').value = veiculo.modelo || '';
+                document.getElementById('vei-troca-oleo').value = veiculo.proxima_troca_oleo || '';
+                document.getElementById('vei-ultima-troca-oleo').value = veiculo.ultima_troca_oleo || '';
+                document.getElementById('vei-intervalo-oleo').value = veiculo.intervalo_troca_oleo_km ?? '';
+            }
             document.getElementById('modal-veiculo').style.display = 'flex';
         }
 
         function fecharModalVeiculo() {
+            if (salvandoVeiculo) return;
+            veiculoIdEdicao = null;
             document.getElementById('modal-veiculo').style.display = 'none';
             document.getElementById('form-veiculo').reset();
         }
 
         async function salvarVeiculo(event) {
             event.preventDefault();
+            if (salvandoVeiculo) return;
+            const placa = document.getElementById('vei-placa').value.trim().toUpperCase();
+            const modelo = document.getElementById('vei-modelo').value.trim();
+            const proxima_troca_oleo = document.getElementById('vei-troca-oleo').value || null;
+            const ultima_troca_oleo = document.getElementById('vei-ultima-troca-oleo').value || null;
+            const intervaloTexto = document.getElementById('vei-intervalo-oleo').value;
+            const intervalo_troca_oleo_km = intervaloTexto === '' ? null : Number(intervaloTexto);
+            if (ultima_troca_oleo && proxima_troca_oleo && proxima_troca_oleo < ultima_troca_oleo) {
+                alert('A próxima troca não pode ser anterior à última troca de óleo.'); return;
+            }
+            if (intervalo_troca_oleo_km !== null && (!Number.isInteger(intervalo_troca_oleo_km) || intervalo_troca_oleo_km < 1 || intervalo_troca_oleo_km > 2147483647)) {
+                alert('Informe um intervalo em quilômetros inteiro e maior que zero.'); return;
+            }
+            if (!placa || !modelo) { alert('Preencha a placa e o modelo/marca.'); return; }
+            const id = veiculoIdEdicao;
+            salvandoVeiculo = true;
             const btnSalvar = document.getElementById('btn-salvar-vei');
             btnSalvar.innerText = 'Salvando...';
             btnSalvar.disabled = true;
 
-            const placa = document.getElementById('vei-placa').value.toUpperCase();
-            const modelo = document.getElementById('vei-modelo').value;
-
-            const { error } = await _supabase.from('veiculos').insert([{
-                placa: placa, 
-                modelo: modelo, 
-                em_uso: false 
-            }]);
-
-            btnSalvar.innerText = 'Cadastrar Caminhão';
-            btnSalvar.disabled = false;
-
-            if (error) {
-                alert("Erro ao cadastrar caminhão: " + error.message);
-            } else {
+            let sucesso = false;
+            try {
+                const consulta = id
+                    ? _supabase.from('veiculos').update({ placa, modelo, proxima_troca_oleo, ultima_troca_oleo, intervalo_troca_oleo_km }).eq('id', id)
+                    : _supabase.from('veiculos').insert([{ placa, modelo, proxima_troca_oleo, ultima_troca_oleo, intervalo_troca_oleo_km, em_uso: false }]);
+                const { data, error } = await consulta.select('id').single();
+                if (error) throw error;
+                if (!data) throw new Error('Nenhum veículo foi salvo.');
+                sucesso = true;
+            } catch (error) {
+                alert(error.code === '23505' ? 'Essa placa já está cadastrada em outro veículo.' : 'Erro ao salvar veículo: ' + error.message);
+            } finally {
+                salvandoVeiculo = false;
+                btnSalvar.innerText = id ? 'Salvar alterações' : 'Cadastrar Caminhão';
+                btnSalvar.disabled = false;
+            }
+            if (sucesso) {
                 fecharModalVeiculo();
                 carregarFrota(); 
             }
@@ -2167,12 +3092,22 @@
             }
 
             function abrirSecao(id) {
+                if (!sessaoAdministrativa) return;
+                const secao = document.getElementById('sec-' + id);
+                if (!secao) return;
+                document.querySelectorAll('.sidebar .menu-item').forEach(item => {
+                    const ativo = item.getAttribute('onclick') === `abrirSecao('${id}')`;
+                    item.classList.toggle('active', ativo);
+                    if (ativo) item.setAttribute('aria-current', 'page');
+                    else item.removeAttribute('aria-current');
+                });
                 document.querySelectorAll('.secao').forEach(s => s.style.display = 'none');
                 document.getElementById('sec-' + id).style.display = 'block';
                 
                 if(id === 'motoristas') carregarMotoristas();
                 if(id === 'rotas') carregarRotas();
                 if(id === 'frota') carregarFrota();
+                if(id === 'gerenciar-senhas') carregarUsuariosAdmin();
                 
                 if(id === 'clientes' || id === 'montar-rota') {
                     carregarClientes();
@@ -2186,6 +3121,14 @@
             }
 
             document.addEventListener('DOMContentLoaded', () => {
+                verificarAlertaOleo();
+                verificarAlertaToxicologico();
+                setInterval(() => {
+                    if (!document.hidden) { verificarAlertaOleo(); verificarAlertaToxicologico(); }
+                }, 60000);
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) { verificarAlertaOleo(); verificarAlertaToxicologico(); }
+                });
                 abrirSecao('dashboard'); 
                 
                 // EVENTO DE LOGIN (ENTER)
